@@ -799,7 +799,7 @@ Step 3: If verification fails, explain issue and correct.
 
 Final Answer = {VERIFIED_ANSWER}
 
-{{QUESTION}
+{QUESTION}
 {INPUT_DATA}
 ```
 
