@@ -330,7 +330,7 @@
         "PROCEDURAL_STEPS"
       ],
       "detectionInstruction": "Look for 'Validate', 'Check', 'Verify', 'ensure', or self-checking requirements.",
-      "placeholderExample": "Step 1: Generate an initial answer: {ANSWER_1}\n\nStep 2: Verify whether {ANSWER_1} satisfies constraints: {CONSTRAINTS}\n\nStep 3: If verification fails, explain issue and correct.\n\nFinal Answer = {VERIFIED_ANSWER}\n\n{{QUESTION}\n{INPUT_DATA}",
+      "placeholderExample": "Step 1: Generate an initial answer: {ANSWER_1}\n\nStep 2: Verify whether {ANSWER_1} satisfies constraints: {CONSTRAINTS}\n\nStep 3: If verification fails, explain issue and correct.\n\nFinal Answer = {VERIFIED_ANSWER}\n\n{QUESTION}\n{INPUT_DATA}",
       "example": "Step 1: Generate an initial answer.\nStep 2: Verify whether the answer satisfies the requirements.\nStep 3: If verification fails, explain the issues.\nFinal Answer: {final answer}\n\nQuestion:\nWhat is the capital of Australia?\nFinal Answer: Canberra",
       "notes": null,
       "formalization": "pattern SelfVerification\ncategory OUTPUT_CONTROL\n\nvariables {\n    question* : string\n    input_data? : string\n    constraints... : list\n}\n\ntemplate ```\nStep 1: Generate an initial answer.\n\nStep 2: Verify whether the answer satisfies constraints:\n{{^constraints}}\n  - {{.}}\n{{/constraints}}\n\nStep 3: If verification fails, explain issue and correct.\n\nFinal Answer = verified answer\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",

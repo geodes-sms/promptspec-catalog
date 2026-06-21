@@ -122,7 +122,7 @@ Step 3: If verification fails, explain issue and correct.
 
 Final Answer = {VERIFIED_ANSWER}
 
-{{QUESTION}
+{QUESTION}
 {INPUT_DATA}",Verification
 SelfCalibration,Output Control,"Constraints, Procedural Steps","After answering, the model estimates its confidence that the answer is correct and revises or abstains when that confidence is low.","Answer the question. Then state your confidence from 0–100% that the answer is correct, with a one-line justification. If your confidence is below 60%, revise your answer or say you are not sure.
 
