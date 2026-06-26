@@ -95,6 +95,10 @@ def expected_extensions(
     rows: list[dict[str, str]], raw_rows: list[dict[str, str]], errors: list[str]
 ) -> dict[str, list[dict[str, str]]]:
     csv_names = {row["Pattern Name"] for row in rows}
+    csv_index: dict[str, dict[str, str]] = {}
+    for row in rows:
+        for key in csv_match_keys(row["Pattern Name"]):
+            csv_index[key] = row
     included_rows = [row for row in raw_rows if row["status"] == "INCLUDED"]
     by_final_name: dict[str, list[dict[str, str]]] = {name: [] for name in csv_names}
 
@@ -110,10 +114,55 @@ def expected_extensions(
             {"name": row["raw_name"], "source": row["source_key"]}
         )
 
+    variant_concepts: dict[str, list[dict[str, str]]] = {}
+    for row in raw_rows:
+        if row.get("decision_class") == "variant":
+            merged_from_key = (row.get("merged_from_key") or "").strip()
+            if not merged_from_key:
+                errors.append(
+                    f"variant raw row {row.get('raw_id', '<missing raw_id>')} "
+                    "has no merged_from_key"
+                )
+                continue
+            variant_concepts.setdefault(merged_from_key, []).append(row)
+
+    for canonical_key, concept_rows in sorted(variant_concepts.items()):
+        folds_into = {row.get("folds_into", "").strip() for row in concept_rows}
+        if len(folds_into) != 1 or not next(iter(folds_into)):
+            errors.append(
+                f"variant concept {canonical_key!r} must have exactly one non-empty folds_into"
+            )
+            continue
+        target_name = next(iter(folds_into))
+        target_row = csv_index.get(normalize_name(target_name))
+        if target_row is None:
+            errors.append(
+                f"variant concept {canonical_key!r} folds_into {target_name!r}, "
+                "which does not match a retained pattern"
+            )
+            continue
+        representative = min(
+            concept_rows,
+            key=lambda row: (
+                int(row["raw_id"]) if row["raw_id"].isdigit() else sys.maxsize,
+                row["source_key"],
+                row["raw_name"],
+            ),
+        )
+        by_final_name[target_row["Pattern Name"]].append(
+            {"name": representative["raw_name"], "source": representative["source_key"]}
+        )
+
     for final_name, extensions in by_final_name.items():
         if not extensions:
             errors.append(f"CSV Pattern Name {final_name!r} has no INCLUDED raw extensions")
-        extensions.sort(key=lambda item: (item["source"], item["name"]))
+        unique = {
+            (extension["name"], extension["source"]): extension
+            for extension in extensions
+        }
+        by_final_name[final_name] = sorted(
+            unique.values(), key=lambda item: (item["source"], item["name"])
+        )
 
     return by_final_name
 
@@ -124,10 +173,10 @@ def main() -> None:
     patterns = read_json_patterns()
     errors: list[str] = []
 
-    if len(rows) != 29:
-        errors.append(f"CSV row count expected 29, got {len(rows)}")
-    if len(patterns) != 29:
-        errors.append(f"JSON pattern count expected 29, got {len(patterns)}")
+    if len(rows) != len(patterns):
+        errors.append(
+            f"pattern count mismatch: CSV has {len(rows)}, JSON has {len(patterns)}"
+        )
 
     csv_index: dict[str, dict[str, str]] = {}
     for row in rows:
@@ -173,13 +222,16 @@ def main() -> None:
             )
 
     extensions_by_final_name = expected_extensions(rows, raw_rows, errors)
-    included_count = sum(1 for row in raw_rows if row["status"] == "INCLUDED")
+    expected_extension_count = sum(
+        len(extensions) for extensions in extensions_by_final_name.values()
+    )
     actual_extension_count = sum(
         len(pattern.get("extensions", [])) for pattern in patterns
     )
-    if actual_extension_count != included_count:
+    if actual_extension_count != expected_extension_count:
         errors.append(
-            f"extension total expected {included_count} INCLUDED rows, got {actual_extension_count}"
+            f"extension total expected {expected_extension_count} retained-source and "
+            f"folded-variant entries, got {actual_extension_count}"
         )
 
     for json_key, pattern in json_index.items():
@@ -197,9 +249,12 @@ def main() -> None:
         fail_with_errors(errors)
 
     print("Catalog sync validation passed.")
-    print("  Patterns: 29 JSON <-> 29 CSV")
+    print(f"  Patterns: {len(patterns)} JSON <-> {len(rows)} CSV")
     print("  Categories and componentTypes match the final taxonomy CSV.")
-    print(f"  Extensions: {actual_extension_count} generated entries match INCLUDED rows.")
+    print(
+        f"  Extensions: {actual_extension_count} generated entries match retained "
+        "sources and folded variants."
+    )
 
 
 if __name__ == "__main__":

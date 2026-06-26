@@ -1,0 +1,20 @@
+pattern MetaLanguageCreation
+category CONTEXT_CONTROL
+
+variables {
+    shorthand* : string
+    meaning* : string
+    question* : string
+    input_data? : string
+}
+
+template ```
+In this conversation, interpret "{{shorthand}}" to mean: {{meaning}}
+
+Whenever I use "{{shorthand}}", apply that meaning in the rest of the prompt or conversation.
+
+{{question}}
+{{#input_data}}
+{{input_data}}
+{{/input_data}}
+```

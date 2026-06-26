@@ -2,12 +2,12 @@
   "$schema": "../schema/pattern.schema.json",
   "catalog": "PromptSpec Pattern Catalog",
   "version": "0.1.0",
-  "count": 29,
+  "count": 30,
   "patterns": [
     {
       "id": "zero_shot",
       "name": "ZeroShot",
-      "description": "Provide no examples to guide the task; rely on direct instructions plus input data.",
+      "description": "Provide no examples to guide the task.",
       "category": "IN_CONTEXT_LEARNING",
       "subcategory": "Zero-shot",
       "componentTypes": [
@@ -15,7 +15,7 @@
       ],
       "detectionInstruction": "Absence of example input-output pairs; task relies on instruction alone.",
       "placeholderExample": "Instruction: {QUESTION}\nInput data: {INPUT_DATA}",
-      "example": "Translate the following English word to French.\n\nInput: Morning",
+      "example": "Translate English to French. \n\nExample:\nInput: Night\nOutput: Nuit\n\nNow apply to:\nMorning",
       "notes": "Represents the default prompting strategy when no demonstrations are provided.",
       "formalization": "pattern ZeroShot\ncategory IN_CONTEXT_LEARNING\n\nvariables {\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nInstruction: {{question}}\n{{#input_data}}\nInput data: {{input_data}}\n{{/input_data}}\n```\n",
       "extensions": [
@@ -36,7 +36,7 @@
     {
       "id": "few_shot",
       "name": "FewShot",
-      "description": "Provide exemplar input-output pairs to guide the model.",
+      "description": "Provide a few exemplar input-output pairs to guide the model.",
       "category": "IN_CONTEXT_LEARNING",
       "subcategory": "Few-shot",
       "componentTypes": [
@@ -62,7 +62,7 @@
     {
       "id": "chain_of_thought",
       "name": "ChainOfThought",
-      "description": "Encourage generic step-by-step reasoning before the final answer.",
+      "description": "Encourage step-by-step reasoning before final answer.",
       "category": "REASONING",
       "subcategory": "Chain-of-Thought",
       "componentTypes": [
@@ -79,6 +79,10 @@
           "source": "fagbohun2024"
         },
         {
+          "name": "Chain-of-Symbol (CoS) Prompting",
+          "source": "sahoo2024"
+        },
+        {
           "name": "Chain-of-Thought (CoT) Prompting",
           "source": "sahoo2024"
         },
@@ -87,7 +91,15 @@
           "source": "schulhoff2024"
         },
         {
+          "name": "Contrastive CoT Prompting",
+          "source": "schulhoff2024"
+        },
+        {
           "name": "Few-Shot CoT",
+          "source": "schulhoff2024"
+        },
+        {
+          "name": "Tabular CoT (Tab-CoT)",
           "source": "schulhoff2024"
         },
         {
@@ -96,129 +108,6 @@
         },
         {
           "name": "Chain-of-Thought (CoT)",
-          "source": "vatsal2024"
-        }
-      ]
-    },
-    {
-      "id": "visualization_generator",
-      "name": "VisualizationGenerator",
-      "description": "Generate visual or tabular representations for tools such as charting libraries.",
-      "category": "OUTPUT_CONTROL",
-      "subcategory": "Output formatting",
-      "componentTypes": [
-        "OUTPUT_FORMAT"
-      ],
-      "detectionInstruction": "Look for requests for charts, plots, diagrams, visualizations, or tool-specific formatting.",
-      "placeholderExample": "Generate visualization: {VISUALIZATION_TYPE}\n\nStructure data for tool: {TOOL}\n\nOutput must be formatted for visualization.\n\n{QUESTION}\n{INPUT_DATA}",
-      "example": "Generate visualization: bar chart\nStructure data for tool: matplotlib\nOutput must be formatted for visualization.",
-      "notes": null,
-      "formalization": "pattern VisualizationGenerator\ncategory OUTPUT_CONTROL\n\nvariables {\n    visualization_type* : string\n    tool? : string\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nGenerate visualization: {{visualization_type}}\n{{#tool}}\n\nStructure data for tool: {{tool}}\n{{/tool}}\n\nOutput must be formatted for visualization.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
-      "extensions": [
-        {
-          "name": "Visualization Generator",
-          "source": "white2023"
-        }
-      ]
-    },
-    {
-      "id": "persona",
-      "name": "Persona",
-      "description": "Adopt a role/persona to shape style and voice.",
-      "category": "CONTEXT_CONTROL",
-      "subcategory": "Role & perspective",
-      "componentTypes": [
-        "CONTEXT",
-        "OUTPUT_FORMAT",
-        "PROFILE_ROLE"
-      ],
-      "detectionInstruction": "Look for 'Act as', 'You are', 'As a', or identity/role-setting phrases.",
-      "placeholderExample": "Act as {PERSONA}\nProvide outputs that {PERSONA} would create\n\n{QUESTION}\n{INPUT_DATA}",
-      "example": "Act as a helpful math tutor.\nProvide outputs that a helpful math tutor would create\n\nExplain how to solve the following equation step by step:\n2x + 5 = 15",
-      "notes": null,
-      "formalization": "pattern Persona\ncategory CONTEXT_CONTROL\n\nvariables {\n    persona* : string\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nAct as {{persona}}\nProvide outputs that {{persona}} would create\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
-      "extensions": [
-        {
-          "name": "Multi-Personas Prompting",
-          "source": "fagbohun2024"
-        },
-        {
-          "name": "Role Prompting",
-          "source": "schulhoff2024"
-        },
-        {
-          "name": "Persona",
-          "source": "white2023"
-        }
-      ]
-    },
-    {
-      "id": "context_manager",
-      "name": "ContextManager",
-      "description": "Explicitly control what context the model uses to avoid drift.",
-      "category": "CONTEXT_CONTROL",
-      "subcategory": "Context grounding",
-      "componentTypes": [
-        "CONTEXT",
-        "DIRECTIVE",
-        "PROCEDURAL_STEPS"
-      ],
-      "detectionInstruction": "Look for scope constraints, context-inclusion/exclusion directives, or grounding instructions.",
-      "placeholderExample": "Set scope: {SCOPE}\nInclude only: {INCLUDE_ITEMS}\nExclude always: {EXCLUDE_ITEMS}\nIf signal = \"reset\", discard accumulated context and restart within {SCOPE}.\n\n{QUESTION}\n{INPUT_DATA}",
-      "example": "Within scope X\nPlease consider Y\nPlease ignore Z\n(Optional) start over",
-      "notes": null,
-      "formalization": "pattern ContextManager\ncategory CONTEXT_CONTROL\n\nvariables {\n    scope* : string\n    include_items... : list\n    exclude_items... : list\n    reset_signal? : string = \"reset\"\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nSet scope: {{scope}}\n{{#include_items}}\nInclude only:\n{{^include_items}}\n  - {{.}}\n{{/include_items}}\n{{/include_items}}\n{{#exclude_items}}\nExclude always:\n{{^exclude_items}}\n  - {{.}}\n{{/exclude_items}}\n{{/exclude_items}}\n{{#reset_signal}}\nIf signal = \"{{reset_signal}}\", discard accumulated context and restart within {{scope}}.\n{{/reset_signal}}\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
-      "extensions": [
-        {
-          "name": "Context Manager",
-          "source": "white2023"
-        }
-      ]
-    },
-    {
-      "id": "recipe",
-      "name": "Recipe",
-      "description": "Provide a repeatable recipe-style sequence for solving tasks.",
-      "category": "OUTPUT_CONTROL",
-      "subcategory": "Procedural",
-      "componentTypes": [
-        "DIRECTIVE",
-        "PROCEDURAL_STEPS"
-      ],
-      "detectionInstruction": "Look for step-by-step procedural instructions, ordered task sequences, or 'Follow these steps' patterns.",
-      "placeholderExample": "I would like to achieve {INPUT_DATA}.\nProvide a complete sequence of steps for me.\nFill in any missing steps.\nIdentify any unnecessary steps.",
-      "example": "List ordered steps: STEP_1 = Preheat oven, STEP_2 = Mix flour and sugar, STEP_3 = Bake for 30 minutes\nFill in missing steps if necessary.\nIdentify unnecessary steps if present.",
-      "notes": null,
-      "formalization": "pattern Recipe\ncategory OUTPUT_CONTROL\n\nvariables {\n    pronoun? : enum = \"I\" | [\"I\", \"You\", \"We\"]\n    goal* : string\n    steps... : list\n    complete? : bool = true\n    missing? : bool = true\n    unnecessary? : bool = false\n}\n\ntemplate ```\n{{pronoun}} would like to achieve {{goal}}.\n{{#complete}}\nProvide a complete sequence of steps.\n{{/complete}}\n{{#missing}}\nFill in any missing steps.\n{{/missing}}\n{{#unnecessary}}\nIdentify any unnecessary steps.\n{{/unnecessary}}\n{{#steps}}\nSteps to consider:\n{{^steps}}\n  - {{.}}\n{{/steps}}\n{{/steps}}```\n",
-      "extensions": [
-        {
-          "name": "Recipe",
-          "source": "white2023"
-        }
-      ]
-    },
-    {
-      "id": "structured_cot",
-      "name": "StructuredCoT",
-      "description": "Structure reasoning with program-like constructs such as sequencing, branching, and looping.",
-      "category": "REASONING",
-      "subcategory": "Chain-of-Thought",
-      "componentTypes": [
-        "OUTPUT_FORMAT",
-        "PROCEDURAL_STEPS"
-      ],
-      "detectionInstruction": "Look for explicit reasoning structures: sequencing, IF-THEN branching, FOR-loops, or structured analysis steps.",
-      "placeholderExample": "Use structured reasoning constructs:\n- Sequencing: {STEP_1}, {STEP_2}, …\n- Branching: IF {CONDITION} THEN {ACTION}\n- Looping: FOR {ITEM} IN {SET} DO {ACTION}\nEnd with final answer.\n\n{QUESTION}\n{INPUT_DATA}",
-      "example": "Sequencing: Initialize sum = 0\nLooping: FOR i=1..10 IF i is even THEN sum += i\nEnd with final answer.",
-      "notes": null,
-      "formalization": "pattern StructuredCoT\ncategory REASONING\n\nvariables {\n    question* : string\n    input_data? : string\n    steps... : list\n    condition? : string\n    action? : string\n    item? : string\n    set_name? : string\n}\n\ntemplate ```\nUse structured reasoning constructs:\n{{#steps}}\n- Sequencing:\n{{^steps}}\n  - {{.}}\n{{/steps}}\n{{/steps}}\n{{#condition}}\n- Branching: IF {{condition}} THEN {{action}}\n{{/condition}}\n{{#item}}\n- Looping: FOR {{item}} IN {{set_name}} DO {{action}}\n{{/item}}\nEnd with final answer.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
-      "extensions": [
-        {
-          "name": "Structured CoT (SCoT) Prompting",
-          "source": "sahoo2024"
-        },
-        {
-          "name": "Structured Chain-of-Thought (SCoT)",
           "source": "vatsal2024"
         }
       ]
@@ -244,6 +133,32 @@
         },
         {
           "name": "Complex CoT",
+          "source": "vatsal2024"
+        }
+      ]
+    },
+    {
+      "id": "structured_cot",
+      "name": "StructuredCoT",
+      "description": "Structure reasoning with program-like constructs (loops, branches).",
+      "category": "REASONING",
+      "subcategory": "Chain-of-Thought",
+      "componentTypes": [
+        "OUTPUT_FORMAT",
+        "PROCEDURAL_STEPS"
+      ],
+      "detectionInstruction": "Look for explicit reasoning structures: sequencing, IF-THEN branching, FOR-loops, or structured analysis steps.",
+      "placeholderExample": "Use structured reasoning constructs:\n- Sequencing: {STEP_1}, {STEP_2}, …\n- Branching: IF {CONDITION} THEN {ACTION}\n- Looping: FOR {ITEM} IN {SET} DO {ACTION}\nEnd with final answer.\n\n{QUESTION}\n{INPUT_DATA}",
+      "example": "Sequencing: Initialize sum = 0\nLooping: FOR i=1..10 IF i is even THEN sum += i\nEnd with final answer.",
+      "notes": null,
+      "formalization": "pattern StructuredCoT\ncategory REASONING\n\nvariables {\n    question* : string\n    input_data? : string\n    steps... : list\n    condition? : string\n    action? : string\n    item? : string\n    set_name? : string\n}\n\ntemplate ```\nUse structured reasoning constructs:\n{{#steps}}\n- Sequencing:\n{{^steps}}\n  - {{.}}\n{{/steps}}\n{{/steps}}\n{{#condition}}\n- Branching: IF {{condition}} THEN {{action}}\n{{/condition}}\n{{#item}}\n- Looping: FOR {{item}} IN {{set_name}} DO {{action}}\n{{/item}}\nEnd with final answer.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
+      "extensions": [
+        {
+          "name": "Structured CoT (SCoT) Prompting",
+          "source": "sahoo2024"
+        },
+        {
+          "name": "Structured Chain-of-Thought (SCoT)",
           "source": "vatsal2024"
         }
       ]
@@ -299,6 +214,37 @@
       ]
     },
     {
+      "id": "persona",
+      "name": "Persona",
+      "description": "Adopt a role/persona to shape style/voice.",
+      "category": "CONTEXT_CONTROL",
+      "subcategory": "Role & perspective",
+      "componentTypes": [
+        "CONTEXT",
+        "OUTPUT_FORMAT",
+        "PROFILE_ROLE"
+      ],
+      "detectionInstruction": "Look for 'Act as', 'You are', 'As a', or identity/role-setting phrases.",
+      "placeholderExample": "Act as {PERSONA}\nProvide outputs that {PERSONA} would create\n\n{QUESTION}\n{INPUT_DATA}",
+      "example": "Act as a helpful math tutor.\nProvide outputs that a helpful math tutor would create\n\nExplain how to solve the following equation step by step:\n2x + 5 = 15",
+      "notes": null,
+      "formalization": "pattern Persona\ncategory CONTEXT_CONTROL\n\nvariables {\n    persona* : string\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nAct as {{persona}}\nProvide outputs that {{persona}} would create\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
+      "extensions": [
+        {
+          "name": "Multi-Personas Prompting",
+          "source": "fagbohun2024"
+        },
+        {
+          "name": "Role Prompting",
+          "source": "schulhoff2024"
+        },
+        {
+          "name": "Persona",
+          "source": "white2023"
+        }
+      ]
+    },
+    {
       "id": "reverse_cot",
       "name": "ReverseCoT",
       "description": "Generate reasoning steps after giving the answer, to simulate justification.",
@@ -322,7 +268,7 @@
     {
       "id": "self_verification",
       "name": "SelfVerification",
-      "description": "Ask the model to verify its own answer against explicit constraints before finalizing.",
+      "description": "Model checks and verifies its own answers before finalizing.",
       "category": "OUTPUT_CONTROL",
       "subcategory": "Verification",
       "componentTypes": [
@@ -388,7 +334,7 @@
     {
       "id": "reflection",
       "name": "Reflection",
-      "description": "Model reflects on its first output, critiques it, and produces a revised answer.",
+      "description": "Model reflects on its first output, critiques, and improves it.",
       "category": "OUTPUT_CONTROL",
       "subcategory": "Verification",
       "componentTypes": [
@@ -433,9 +379,31 @@
       ]
     },
     {
+      "id": "recipe",
+      "name": "Recipe",
+      "description": "Provide a repeatable recipe-style sequence for solving tasks.",
+      "category": "OUTPUT_CONTROL",
+      "subcategory": "Procedural",
+      "componentTypes": [
+        "DIRECTIVE",
+        "PROCEDURAL_STEPS"
+      ],
+      "detectionInstruction": "Look for step-by-step procedural instructions, ordered task sequences, or 'Follow these steps' patterns.",
+      "placeholderExample": "I would like to achieve {INPUT_DATA}.\nProvide a complete sequence of steps for me.\nFill in any missing steps.\nIdentify any unnecessary steps.",
+      "example": "List ordered steps: STEP_1 = Preheat oven, STEP_2 = Mix flour and sugar, STEP_3 = Bake for 30 minutes\nFill in missing steps if necessary.\nIdentify unnecessary steps if present.",
+      "notes": null,
+      "formalization": "pattern Recipe\ncategory OUTPUT_CONTROL\n\nvariables {\n    pronoun? : enum = \"I\" | [\"I\", \"You\", \"We\"]\n    goal* : string\n    steps... : list\n    complete? : bool = true\n    missing? : bool = true\n    unnecessary? : bool = false\n}\n\ntemplate ```\n{{pronoun}} would like to achieve {{goal}}.\n{{#complete}}\nProvide a complete sequence of steps.\n{{/complete}}\n{{#missing}}\nFill in any missing steps.\n{{/missing}}\n{{#unnecessary}}\nIdentify any unnecessary steps.\n{{/unnecessary}}\n{{#steps}}\nSteps to consider:\n{{^steps}}\n  - {{.}}\n{{/steps}}\n{{/steps}}```\n",
+      "extensions": [
+        {
+          "name": "Recipe",
+          "source": "white2023"
+        }
+      ]
+    },
+    {
       "id": "template",
       "name": "Template",
-      "description": "Preserve a provided human-readable prose template or textual layout.",
+      "description": "Use a reusable template to structure answers consistently.",
       "category": "OUTPUT_CONTROL",
       "subcategory": "Output formatting",
       "componentTypes": [
@@ -444,13 +412,59 @@
       ],
       "detectionInstruction": "Look for reusable response templates, named format skeletons, or 'use this structure' directives.",
       "placeholderExample": "Use template: {TEMPLATE}\n\nInsert content into placeholders: {PLACEHOLDER_1}, {PLACEHOLDER_2}, …\n\nPreserve formatting of template.\n\n{QUESTION}\n{INPUT_DATA}",
-      "example": "Use this template for every response:\n\nTitle: {TITLE}\nSummary: {SUMMARY}\nNext Steps:\n1. {STEP_ONE}\n2. {STEP_TWO}\n\nFill the placeholders for a project status update about migrating a documentation site. Preserve the labels, numbering, and line breaks.",
+      "example": null,
       "notes": null,
       "formalization": "pattern Template\ncategory OUTPUT_CONTROL\n\nvariables {\n    template* : string\n    placeholders... : list\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nUse template: {{template}}\n\nInsert content into placeholders:\n{{^placeholders}}\n  - {{.}}\n{{/placeholders}}\n\nPreserve formatting of template.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
       "extensions": [
         {
           "name": "Template",
           "source": "white2023"
+        }
+      ]
+    },
+    {
+      "id": "visualization_generator",
+      "name": "VisualizationGenerator",
+      "description": "Generate visual or tabular representations (charts, tables).",
+      "category": "OUTPUT_CONTROL",
+      "subcategory": "Output formatting",
+      "componentTypes": [
+        "OUTPUT_FORMAT"
+      ],
+      "detectionInstruction": "Look for requests for charts, plots, diagrams, visualizations, or tool-specific formatting.",
+      "placeholderExample": "Generate visualization: {VISUALIZATION_TYPE}\n\nStructure data for tool: {TOOL}\n\nOutput must be formatted for visualization.\n\n{QUESTION}\n{INPUT_DATA}",
+      "example": "Generate visualization: bar chart\nStructure data for tool: matplotlib\nOutput must be formatted for visualization.",
+      "notes": null,
+      "formalization": "pattern VisualizationGenerator\ncategory OUTPUT_CONTROL\n\nvariables {\n    visualization_type* : string\n    tool? : string\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nGenerate visualization: {{visualization_type}}\n{{#tool}}\n\nStructure data for tool: {{tool}}\n{{/tool}}\n\nOutput must be formatted for visualization.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
+      "extensions": [
+        {
+          "name": "Visualization Generator",
+          "source": "white2023"
+        }
+      ]
+    },
+    {
+      "id": "schema_specs",
+      "name": "SchemaSpecs",
+      "description": "Define schema/structure the model must follow.",
+      "category": "OUTPUT_CONTROL",
+      "subcategory": "Schema specification",
+      "componentTypes": [
+        "OUTPUT_FORMAT"
+      ],
+      "detectionInstruction": "Look for JSON schema declarations, field requirements, type specifications, or structural output requirements.",
+      "placeholderExample": "Force output into schema: {SCHEMA}\n\nPopulate schema fields: {FIELD_1}, {FIELD_2}, …\n\n{QUESTION}",
+      "example": "Output must follow schema: {Title:…, Author:…, Year:…}”",
+      "notes": null,
+      "formalization": "pattern SchemaSpecs\ncategory OUTPUT_CONTROL\n\nvariables {\n    schema* : string\n    fields... : list\n    question* : string\n}\n\ntemplate ```\nForce output into schema: {{schema}}\n{{#fields}}\n\nPopulate schema fields:\n{{^fields}}\n  - {{.}}\n{{/fields}}\n{{/fields}}\n\n{{question}}\n```\n",
+      "extensions": [
+        {
+          "name": "Constrained Vocabulary Prompting",
+          "source": "fagbohun2024"
+        },
+        {
+          "name": "Output Formatting / Answer Shape & Space (vocabulary terms)",
+          "source": "schulhoff2024"
         }
       ]
     },
@@ -503,7 +517,7 @@
     {
       "id": "infinite_generation",
       "name": "InfiniteGeneration",
-      "description": "Model generates continuously, with prompts to keep going.",
+      "description": "Model generates continuously, with prompts to “keep going.”",
       "category": "META_DIRECTIVES",
       "subcategory": "Interaction",
       "componentTypes": [
@@ -522,30 +536,9 @@
       ]
     },
     {
-      "id": "schema_specs",
-      "name": "SchemaSpecs",
-      "description": "Define an explicit schema or required fields that the model output must follow.",
-      "category": "OUTPUT_CONTROL",
-      "subcategory": "Schema specification",
-      "componentTypes": [
-        "OUTPUT_FORMAT"
-      ],
-      "detectionInstruction": "Look for JSON schema declarations, field requirements, type specifications, or structural output requirements.",
-      "placeholderExample": "Force output into schema: {SCHEMA}\n\nPopulate schema fields: {FIELD_1}, {FIELD_2}, …\n\n{QUESTION}",
-      "example": "Output must follow schema: {Title:…, Author:…, Year:…}”",
-      "notes": null,
-      "formalization": "pattern SchemaSpecs\ncategory OUTPUT_CONTROL\n\nvariables {\n    schema* : string\n    fields... : list\n    question* : string\n}\n\ntemplate ```\nForce output into schema: {{schema}}\n{{#fields}}\n\nPopulate schema fields:\n{{^fields}}\n  - {{.}}\n{{/fields}}\n{{/fields}}\n\n{{question}}\n```\n",
-      "extensions": [
-        {
-          "name": "Output Formatting / Answer Shape & Space (vocabulary terms)",
-          "source": "schulhoff2024"
-        }
-      ]
-    },
-    {
       "id": "question_refinement",
       "name": "QuestionRefinement",
-      "description": "Improve or reformulate the user's query for clarity.",
+      "description": "Improve or reformulate the user’s query for clarity.",
       "category": "META_DIRECTIVES",
       "subcategory": "Enhancement",
       "componentTypes": [
@@ -635,7 +628,7 @@
     {
       "id": "refusal_breaker",
       "name": "RefusalBreaker",
-      "description": "Reframe a request when the model refuses; mainly an on-refusal fallback pattern.",
+      "description": "Overcome model refusals by reframing the request.",
       "category": "META_DIRECTIVES",
       "subcategory": "Enhancement",
       "componentTypes": [
@@ -679,7 +672,7 @@
     {
       "id": "cognitive_verifier",
       "name": "CognitiveVerifier",
-      "description": "Add explicit verification of reasoning correctness via sub-questions.",
+      "description": "Add explicit verification of reasoning correctness.",
       "category": "META_DIRECTIVES",
       "subcategory": "Enhancement",
       "componentTypes": [
@@ -694,6 +687,55 @@
       "extensions": [
         {
           "name": "Cognitive Verifier",
+          "source": "white2023"
+        }
+      ]
+    },
+    {
+      "id": "context_manager",
+      "name": "ContextManager",
+      "description": "Explicitly control what context the model uses to avoid drift.",
+      "category": "CONTEXT_CONTROL",
+      "subcategory": "Context grounding",
+      "componentTypes": [
+        "CONTEXT",
+        "DIRECTIVE",
+        "PROCEDURAL_STEPS"
+      ],
+      "detectionInstruction": "Look for scope constraints, context-inclusion/exclusion directives, or grounding instructions.",
+      "placeholderExample": "Set scope: {SCOPE}\nInclude only: {INCLUDE_ITEMS}\nExclude always: {EXCLUDE_ITEMS}\nIf signal = \"reset\", discard accumulated context and restart within {SCOPE}.\n\n{QUESTION}\n{INPUT_DATA}",
+      "example": "Within scope X\nPlease consider Y\nPlease ignore Z\n(Optional) start over",
+      "notes": null,
+      "formalization": "pattern ContextManager\ncategory CONTEXT_CONTROL\n\nvariables {\n    scope* : string\n    include_items... : list\n    exclude_items... : list\n    reset_signal? : string = \"reset\"\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nSet scope: {{scope}}\n{{#include_items}}\nInclude only:\n{{^include_items}}\n  - {{.}}\n{{/include_items}}\n{{/include_items}}\n{{#exclude_items}}\nExclude always:\n{{^exclude_items}}\n  - {{.}}\n{{/exclude_items}}\n{{/exclude_items}}\n{{#reset_signal}}\nIf signal = \"{{reset_signal}}\", discard accumulated context and restart within {{scope}}.\n{{/reset_signal}}\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
+      "extensions": [
+        {
+          "name": "Cross-disciplinary Prompting",
+          "source": "fagbohun2024"
+        },
+        {
+          "name": "Context Manager",
+          "source": "white2023"
+        }
+      ]
+    },
+    {
+      "id": "meta_language_creation",
+      "name": "MetaLanguageCreation",
+      "description": "Define custom shorthand notation and its semantics for the model to apply in the rest of the prompt or conversation.",
+      "category": "CONTEXT_CONTROL",
+      "subcategory": "Input semantics",
+      "componentTypes": [
+        "CONTEXT",
+        "DIRECTIVE"
+      ],
+      "detectionInstruction": null,
+      "placeholderExample": null,
+      "example": null,
+      "notes": null,
+      "formalization": "pattern MetaLanguageCreation\ncategory CONTEXT_CONTROL\n\nvariables {\n    shorthand* : string\n    meaning* : string\n    question* : string\n    input_data? : string\n}\n\ntemplate ```\nIn this conversation, interpret \"{{shorthand}}\" to mean: {{meaning}}\n\nWhenever I use \"{{shorthand}}\", apply that meaning in the rest of the prompt or conversation.\n\n{{question}}\n{{#input_data}}\n{{input_data}}\n{{/input_data}}\n```\n",
+      "extensions": [
+        {
+          "name": "Meta Language Creation",
           "source": "white2023"
         }
       ]

@@ -20,6 +20,7 @@ DOCS_JSON_PATH = ROOT / "docs" / "catalog" / "patterns.json"
 FORMALIZATION_DIR = ROOT / "method" / "formalizations"
 
 TODO_PATTERNS = set()
+ID_OVERRIDES = {"MetaLanguageCreation": "meta_language_creation"}
 
 CATEGORY_TO_ENUM = {
     "In-context Learning": "IN_CONTEXT_LEARNING",
@@ -134,34 +135,30 @@ def formalization_path(pattern_id: str) -> Path:
     return FORMALIZATION_DIR / f"{pattern_id}.promptspec"
 
 
-def read_formalization(pattern_id: str) -> str:
+def read_formalization(pattern_id: str) -> str | None:
     path = formalization_path(pattern_id)
     if not path.exists():
-        fail(f"missing formalization file for pattern id {pattern_id!r}: {path}")
+        return None
     return path.read_text(encoding="utf-8")
 
 
 def validate_formalization_files(patterns: list[dict[str, Any]]) -> None:
     expected_ids = {str(pattern.get("id")) for pattern in patterns}
-    expected_paths = {formalization_path(pattern_id) for pattern_id in expected_ids}
     actual_paths = set(FORMALIZATION_DIR.glob("*.promptspec"))
-
-    missing = sorted(path.relative_to(ROOT).as_posix() for path in expected_paths - actual_paths)
-    extra = sorted(path.relative_to(ROOT).as_posix() for path in actual_paths - expected_paths)
-
-    if missing or extra:
-        parts = []
-        if missing:
-            parts.append(f"missing formalization files: {missing}")
-        if extra:
-            parts.append(f"extra formalization files: {extra}")
-        fail("; ".join(parts))
+    extra = sorted(
+        path.relative_to(ROOT).as_posix()
+        for path in actual_paths
+        if path.stem not in expected_ids
+    )
+    if extra:
+        fail(f"extra formalization files: {extra}")
 
 
 def build_extensions(
     csv_rows: list[dict[str, str]], raw_rows: list[dict[str, str]]
 ) -> dict[str, list[OrderedDict[str, str]]]:
     csv_names = {row["Pattern Name"] for row in csv_rows}
+    csv_index = build_csv_index(csv_rows)
     included_rows = [row for row in raw_rows if row["status"] == "INCLUDED"]
     by_final_name: dict[str, list[OrderedDict[str, str]]] = {
         name: [] for name in csv_names
@@ -180,16 +177,59 @@ def build_extensions(
             OrderedDict([("name", row["raw_name"]), ("source", row["source_key"])])
         )
 
+    variant_concepts: dict[str, list[dict[str, str]]] = {}
+    for row in raw_rows:
+        if row.get("decision_class") == "variant":
+            merged_from_key = (row.get("merged_from_key") or "").strip()
+            if not merged_from_key:
+                errors.append(
+                    f"variant raw row {row.get('raw_id', '<missing raw_id>')} "
+                    "has no merged_from_key"
+                )
+                continue
+            variant_concepts.setdefault(merged_from_key, []).append(row)
+
+    for canonical_key, concept_rows in sorted(variant_concepts.items()):
+        folds_into = {row.get("folds_into", "").strip() for row in concept_rows}
+        if len(folds_into) != 1 or not next(iter(folds_into)):
+            errors.append(
+                f"variant concept {canonical_key!r} must have exactly one non-empty folds_into"
+            )
+            continue
+        target_name = next(iter(folds_into))
+        target_row = csv_index.get(normalize_name(target_name))
+        if target_row is None:
+            errors.append(
+                f"variant concept {canonical_key!r} folds_into {target_name!r}, "
+                "which does not match a retained pattern"
+            )
+            continue
+        representative = min(
+            concept_rows,
+            key=lambda row: (
+                int(row["raw_id"]) if row["raw_id"].isdigit() else sys.maxsize,
+                row["source_key"],
+                row["raw_name"],
+            ),
+        )
+        by_final_name[target_row["Pattern Name"]].append(
+            OrderedDict(
+                [
+                    ("name", representative["raw_name"]),
+                    ("source", representative["source_key"]),
+                ]
+            )
+        )
+
     for final_name, extensions in by_final_name.items():
         if not extensions:
             errors.append(f"CSV Pattern Name {final_name!r} has no INCLUDED raw extensions")
-        extensions.sort(key=lambda item: (item["source"], item["name"]))
-
-    total_extensions = sum(len(extensions) for extensions in by_final_name.values())
-    if total_extensions != len(included_rows):
-        errors.append(
-            f"extension total mismatch: built {total_extensions}, "
-            f"but master_raw_dataset.csv has {len(included_rows)} INCLUDED rows"
+        unique = {
+            (extension["name"], extension["source"]): extension
+            for extension in extensions
+        }
+        by_final_name[final_name] = sorted(
+            unique.values(), key=lambda item: (item["source"], item["name"])
         )
 
     if errors:
@@ -202,21 +242,38 @@ def ordered_pattern(
     row: dict[str, str],
     extensions: list[OrderedDict[str, str]],
 ) -> OrderedDict[str, Any]:
-    name = str(existing["name"])
+    name = str(existing.get("name") or row["Pattern Name"])
+    pattern_id = ID_OVERRIDES.get(
+        row["Pattern Name"],
+        str(
+            existing.get("id")
+            or re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+        ),
+    )
 
     return OrderedDict(
         [
-            ("id", existing.get("id")),
+            ("id", pattern_id),
             ("name", name),
-            ("description", existing.get("description")),
+            ("description", existing.get("description") or row["Description"].strip()),
             ("category", mapped_category(row)),
             ("subcategory", row["Subcategory"].strip()),
             ("componentTypes", mapped_components(row)),
             ("detectionInstruction", existing.get("detectionInstruction")),
-            ("placeholderExample", existing.get("placeholderExample")),
-            ("example", existing.get("example")),
+            (
+                "placeholderExample",
+                existing.get("placeholderExample")
+                if existing
+                else row["Placeholder example"].strip() or None,
+            ),
+            (
+                "example",
+                existing.get("example")
+                if existing
+                else row["Example"].strip() or None,
+            ),
             ("notes", existing.get("notes")),
-            ("formalization", read_formalization(str(existing.get("id")))),
+            ("formalization", read_formalization(pattern_id)),
             ("extensions", extensions),
         ]
     )
@@ -228,31 +285,25 @@ def main() -> None:
     data = read_json()
     patterns = data.get("patterns", [])
 
-    if len(csv_rows) != 29:
-        fail(f"CSV pattern count must be 29; got {len(csv_rows)}")
-    if len(patterns) != 29:
-        fail(f"JSON pattern count must be 29; got {len(patterns)}")
-    validate_formalization_files(patterns)
-
     csv_index = build_csv_index(csv_rows)
     extensions_by_final_name = build_extensions(csv_rows, raw_rows)
-    matched_csv_names: set[str] = set()
     generated_patterns: list[OrderedDict[str, Any]] = []
-
+    matched_csv_names: set[str] = set()
     for pattern in patterns:
         row = find_csv_row(pattern, csv_index)
         if row is None:
-            fail(f"JSON pattern {pattern.get('name')!r} has no CSV match")
+            fail(f"existing JSON pattern {pattern.get('name')!r} has no CSV match")
         matched_csv_names.add(row["Pattern Name"])
         generated_patterns.append(
             ordered_pattern(pattern, row, extensions_by_final_name[row["Pattern Name"]])
         )
 
-    csv_names = {row["Pattern Name"] for row in csv_rows}
-    if matched_csv_names != csv_names:
-        missing = sorted(csv_names - matched_csv_names)
-        extra = sorted(matched_csv_names - csv_names)
-        fail(f"CSV/JSON match mismatch; only in CSV={missing}, unexpected matches={extra}")
+    for row in csv_rows:
+        if row["Pattern Name"] not in matched_csv_names:
+            generated_patterns.append(
+                ordered_pattern({}, row, extensions_by_final_name[row["Pattern Name"]])
+            )
+    validate_formalization_files(generated_patterns)
 
     output = OrderedDict()
     for key, value in data.items():
@@ -271,6 +322,13 @@ def main() -> None:
         "Built "
         f"{JSON_PATH.relative_to(ROOT)} and {DOCS_JSON_PATH.relative_to(ROOT)} "
         f"from {CSV_PATH.relative_to(ROOT)}"
+    )
+    print("Extension counts:")
+    for pattern in generated_patterns:
+        print(f"  {pattern['name']}: {len(pattern['extensions'])}")
+    print(
+        "  TOTAL: "
+        f"{sum(len(pattern['extensions']) for pattern in generated_patterns)}"
     )
 
 

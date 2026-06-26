@@ -19,6 +19,58 @@
     META_DIRECTIVES: "Meta-Directives"
   };
 
+  var CATEGORY_PALETTES = {
+    IN_CONTEXT_LEARNING: {
+      accent: "#0072B2",
+      soft: "#E8F3F8",
+      ink: "#004F7C"
+    },
+    REASONING: {
+      accent: "#D55E00",
+      soft: "#FBEFE7",
+      ink: "#8C3D00"
+    },
+    OUTPUT_CONTROL: {
+      accent: "#009E73",
+      soft: "#E7F5F0",
+      ink: "#006B4E"
+    },
+    CONTEXT_CONTROL: {
+      accent: "#7A5195",
+      soft: "#F2ECF5",
+      ink: "#573766"
+    },
+    META_DIRECTIVES: {
+      accent: "#A43A75",
+      soft: "#F8EAF2",
+      ink: "#702650"
+    },
+    UNCATEGORIZED: {
+      accent: "#66727F",
+      soft: "#F0F2F4",
+      ink: "#3E4A54"
+    }
+  };
+
+  var SUBCATEGORY_PALETTES = {
+    "Zero-shot": { accent: "#0072B2", soft: "#E8F3F8", ink: "#004F7C" },
+    "Few-shot": { accent: "#56B4E9", soft: "#EDF7FC", ink: "#285F7A" },
+    "Chain-of-Thought": { accent: "#D55E00", soft: "#FBEFE7", ink: "#8C3D00" },
+    Planning: { accent: "#E69F00", soft: "#FCF4DF", ink: "#765100" },
+    Decomposition: { accent: "#B66D12", soft: "#F8F0E5", ink: "#70410A" },
+    "Output formatting": { accent: "#009E73", soft: "#E7F5F0", ink: "#006B4E" },
+    Procedural: { accent: "#2A8F75", soft: "#E9F4F1", ink: "#1B5F4E" },
+    "Schema specification": { accent: "#1B7F8C", soft: "#E8F3F5", ink: "#155661" },
+    Verification: { accent: "#4E8B57", soft: "#EDF4EE", ink: "#315A38" },
+    "Context grounding": { accent: "#7A5195", soft: "#F2ECF5", ink: "#573766" },
+    "Input semantics": { accent: "#8C6BB1", soft: "#F3EFF8", ink: "#5D4775" },
+    "Role & perspective": { accent: "#6F5AA8", soft: "#F0EEF7", ink: "#493B70" },
+    Enhancement: { accent: "#A43A75", soft: "#F8EAF2", ink: "#702650" },
+    Interaction: { accent: "#C44E52", soft: "#F9ECEC", ink: "#7D3033" },
+    Refinement: { accent: "#B24C8A", soft: "#F7EBF3", ink: "#74315A" },
+    Uncategorized: { accent: "#66727F", soft: "#F0F2F4", ink: "#3E4A54" }
+  };
+
   var COMPONENT_LABELS = {
     PROFILE_ROLE: "Profile/Role",
     DIRECTIVE: "Directive",
@@ -33,6 +85,8 @@
     patterns: [],
     filtered: [],
     search: "",
+    category: "",
+    subcategory: "",
     expanded: {}
   };
 
@@ -41,7 +95,10 @@
     tree: document.getElementById("taxonomy-tree"),
     empty: document.getElementById("empty-state"),
     message: document.getElementById("load-message"),
-    search: document.getElementById("search-input")
+    search: document.getElementById("search-input"),
+    category: document.getElementById("category-filter"),
+    subcategory: document.getElementById("subcategory-filter"),
+    clear: document.getElementById("clear-filters")
   };
 
   function text(value) {
@@ -91,13 +148,30 @@
     return element;
   }
 
-  function buttonNode(label, count, level, key, expanded) {
+  function applyPalette(element, palette) {
+    element.style.setProperty("--node-accent", palette.accent);
+    element.style.setProperty("--node-soft", palette.soft);
+    element.style.setProperty("--node-ink", palette.ink);
+  }
+
+  function categoryPalette(category) {
+    return CATEGORY_PALETTES[category] || CATEGORY_PALETTES.UNCATEGORIZED;
+  }
+
+  function subcategoryPalette(subcategory, category) {
+    return SUBCATEGORY_PALETTES[subcategory] || categoryPalette(category);
+  }
+
+  function buttonNode(label, count, level, key, expanded, palette) {
     var button = createElement("button", "tree-toggle level-" + level);
     var panelId = "panel-" + slug(key);
     button.type = "button";
     button.dataset.toggleKey = key;
     button.setAttribute("aria-expanded", expanded ? "true" : "false");
     button.setAttribute("aria-controls", panelId);
+    if (palette) {
+      applyPalette(button, palette);
+    }
 
     button.appendChild(createElement("span", "toggle-mark", expanded ? "-" : "+"));
     button.appendChild(createElement("span", "node-label", label));
@@ -131,10 +205,75 @@
 
   function patternMatches(pattern) {
     var query = state.search.trim().toLowerCase();
-    if (!query) {
-      return true;
+    if (state.category && pattern.category !== state.category) {
+      return false;
     }
-    return patternHaystack(pattern).indexOf(query) !== -1;
+    if (state.subcategory && pattern.subcategory !== state.subcategory) {
+      return false;
+    }
+    return !query || patternHaystack(pattern).indexOf(query) !== -1;
+  }
+
+  function sortedCategories() {
+    var available = {};
+    state.patterns.forEach(function (pattern) {
+      available[pattern.category || "UNCATEGORIZED"] = true;
+    });
+    return CATEGORY_ORDER.filter(function (category) {
+      return available[category];
+    }).concat(
+      Object.keys(available)
+        .filter(function (category) {
+          return CATEGORY_ORDER.indexOf(category) === -1;
+        })
+        .sort()
+    );
+  }
+
+  function sortedSubcategories() {
+    var available = {};
+    state.patterns.forEach(function (pattern) {
+      if (!state.category || pattern.category === state.category) {
+        available[pattern.subcategory || "Uncategorized"] = true;
+      }
+    });
+    return Object.keys(available).sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+  }
+
+  function replaceOptions(select, defaultLabel, options, selectedValue, labeler) {
+    select.textContent = "";
+    var defaultOption = createElement("option", "", defaultLabel);
+    defaultOption.value = "";
+    select.appendChild(defaultOption);
+    options.forEach(function (value) {
+      var option = createElement("option", "", labeler ? labeler(value) : value);
+      option.value = value;
+      select.appendChild(option);
+    });
+    select.value = selectedValue;
+  }
+
+  function updateFilterOptions() {
+    replaceOptions(
+      elements.category,
+      "All categories",
+      sortedCategories(),
+      state.category,
+      labelCategory
+    );
+
+    var subcategories = sortedSubcategories();
+    if (state.subcategory && subcategories.indexOf(state.subcategory) === -1) {
+      state.subcategory = "";
+    }
+    replaceOptions(
+      elements.subcategory,
+      "All subcategories",
+      subcategories,
+      state.subcategory
+    );
   }
 
   function groupPatterns(patterns) {
@@ -217,7 +356,9 @@
 
   function renderTree() {
     state.filtered = state.patterns.filter(patternMatches);
-    var queryActive = Boolean(state.search.trim());
+    var filtersActive = Boolean(
+      state.search.trim() || state.category || state.subcategory
+    );
     var grouped = groupPatterns(state.filtered);
     var categories = CATEGORY_ORDER.filter(function (category) {
       return grouped[category];
@@ -233,10 +374,19 @@
     categories.forEach(function (category) {
       var subgroups = grouped[category];
       var categoryKey = "category:" + category;
-      var categoryExpanded = isExpanded(categoryKey, true, queryActive);
+      var categoryExpanded = isExpanded(categoryKey, true, filtersActive);
       var categoryItem = createElement("section", "tree-item category-item");
+      var categoryColors = categoryPalette(category);
+      applyPalette(categoryItem, categoryColors);
       categoryItem.appendChild(
-        buttonNode(labelCategory(category), countCategory(subgroups), "category", categoryKey, categoryExpanded)
+        buttonNode(
+          labelCategory(category),
+          countCategory(subgroups),
+          "category",
+          categoryKey,
+          categoryExpanded,
+          categoryColors
+        )
       );
 
       var categoryPanel = panelNode(categoryKey, categoryExpanded);
@@ -245,15 +395,28 @@
         .forEach(function (subcategory) {
           var patterns = subgroups[subcategory];
           var subcategoryKey = categoryKey + ":subcategory:" + subcategory;
-          var subcategoryExpanded = isExpanded(subcategoryKey, false, queryActive);
+          var subcategoryExpanded = isExpanded(
+            subcategoryKey,
+            false,
+            filtersActive
+          );
           var subcategoryItem = createElement("div", "tree-item subcategory-item");
+          var subcategoryColors = subcategoryPalette(subcategory, category);
+          applyPalette(subcategoryItem, subcategoryColors);
           subcategoryItem.appendChild(
-            buttonNode(subcategory, patterns.length, "subcategory", subcategoryKey, subcategoryExpanded)
+            buttonNode(
+              subcategory,
+              patterns.length,
+              "subcategory",
+              subcategoryKey,
+              subcategoryExpanded,
+              subcategoryColors
+            )
           );
 
           var subcategoryPanel = panelNode(subcategoryKey, subcategoryExpanded);
           patterns.forEach(function (pattern) {
-            subcategoryPanel.appendChild(renderPattern(pattern, queryActive));
+            subcategoryPanel.appendChild(renderPattern(pattern, filtersActive));
           });
           subcategoryItem.appendChild(subcategoryPanel);
           categoryPanel.appendChild(subcategoryItem);
@@ -279,6 +442,27 @@
     elements.search.addEventListener("input", function (event) {
       state.search = event.target.value;
       renderTree();
+    });
+
+    elements.category.addEventListener("change", function (event) {
+      state.category = event.target.value;
+      updateFilterOptions();
+      renderTree();
+    });
+
+    elements.subcategory.addEventListener("change", function (event) {
+      state.subcategory = event.target.value;
+      renderTree();
+    });
+
+    elements.clear.addEventListener("click", function () {
+      state.search = "";
+      state.category = "";
+      state.subcategory = "";
+      elements.search.value = "";
+      updateFilterOptions();
+      renderTree();
+      elements.search.focus();
     });
 
     elements.tree.addEventListener("click", function (event) {
@@ -324,6 +508,7 @@
           throw new Error("Catalog JSON did not contain a patterns array.");
         }
         state.patterns = data.patterns.slice();
+        updateFilterOptions();
         wireControls();
         renderTree();
         setMessage("", false);

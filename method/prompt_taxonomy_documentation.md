@@ -1,6 +1,6 @@
 # Prompt Pattern Taxonomy — Full Reproducibility Documentation
 
-This document records, in full, the methodology and raw data behind the 29-pattern "writable prompt" taxonomy. Everything here is generated directly from the underlying dataset (`master_raw_dataset.csv`), so the counts below are exact, not estimates.
+This document records, in full, the methodology and raw data behind the 30-pattern "writable prompt" taxonomy. Everything here is generated directly from the underlying dataset (`master_raw_dataset.csv`), so the counts below are exact, not estimates.
 
 ## 1. Source papers
 
@@ -48,16 +48,16 @@ Pass-2 groups were then read again and merged wherever two *differently-named* e
 | Complexity-Based Prompting (Schulhoff 2024) | Complex CoT (Vatsal & Dubey 2024 / Sahoo 2024) | Both select/weight reasoning by complexity and majority-vote over the most complex chains — same underlying idea, Vatsal & Dubey's naming ("Complex CoT") was kept as canonical for the final sheet. |
 | Basic/Standard/Vanilla Prompting (Vatsal & Dubey 2024) | Zero-Shot Prompting | In this literature "basic prompting" (direct query, no scaffolding) and "zero-shot prompting" (no exemplars) are used near-interchangeably as the no-engineering baseline; merged for the catalog. |
 
-**Result: 128 unique underlying concepts/techniques** (down from 163 Pass-2 groups — 35 were synonym merges across differently-named entries). This 128 is the count of genuinely distinct prompting techniques described anywhere across all 5 papers, after full deduplication.
+**Result: 123 unique underlying concepts/techniques** (down from 163 Pass-2 groups — 40 concept-level merges). The consolidation pass includes the five explicitly folded variants recorded in `prompt_taxonomy_variants.csv`.
 
 ### Stage 4 — Final filter: writable single-prompt patterns only
-Each of the 128 unique concepts was then classified into exactly one of three buckets:
+Each of the 123 post-consolidation concepts was then classified into exactly one of three buckets:
 
-- **INCLUDED** (29) — the technique can be written as a single, self-contained instruction block inside one prompt turn, the way White et al.'s Persona pattern works ("Act as X, provide outputs that X would create"). No external tool calls, no multiple LLM invocations, no iterative loop, no training/offline step required to use it.
-- **EXCLUDED_WORKFLOW** (68) — the technique inherently requires multiple LLM calls, an external tool/interpreter/retrieval system, an iterative critique-revise loop, an agentic action loop, an ensembling/voting scheme over multiple samples, or an offline/training-time procedure (e.g. APE, OPRO, Active-Prompting's human-annotation loop, ReAct, RAG, Tree-of-Thought's search, Self-Consistency's majority vote, etc.). These are orchestration/pipeline techniques, not single writable prompts.
-- **EXCLUDED_OUT_OF_SCOPE** (31) — technically a single-prompt technique, but not selected for the final 29-pattern catalog because it is (a) a narrow task-specific variant not meant to generalize (e.g. "Basic with Term Definitions", a medical-domain experiment that the source paper itself found ineffective), (b) a modality-specific extension out of scope for a text-prompt-pattern catalog (e.g. Multimodal Prompting), (c) a design heuristic rather than a discrete prompt pattern (e.g. Exemplar Ordering), or (d) conceptually adjacent to an already-included pattern but not independently corroborated by name+concept across the source papers, and so not selected as a separate catalog entry (e.g. Socratic Prompting, Contrastive Prompting, Grammar Correction, Constrained Vocabulary Prompting).
+- **INCLUDED** (30) — the technique can be written as a single, self-contained instruction block inside one prompt turn, the way White et al.'s Persona pattern works ("Act as X, provide outputs that X would create"). No external tool calls, no multiple LLM invocations, no iterative loop, no training/offline step required to use it.
+- **EXCLUDED_WORKFLOW** (74) — the technique inherently requires multiple LLM calls, an external tool/interpreter/retrieval system, an iterative critique-revise loop, an agentic action loop, an ensembling/voting scheme over multiple samples, or an offline/training-time procedure.
+- **EXCLUDED_OUT_OF_SCOPE** (19) — non-retained single-prompt concepts classified as meta-directive dimensions, prompting examples, preprocessing, non-textual techniques, or training methods. Folded variants are accounted for during consolidation, before this scope filter.
 
-**Final result: 29 writable single-prompt patterns.**
+**Final result: 30 writable single-prompt patterns.**
 
 ## 3. Full count progression
 
@@ -65,9 +65,9 @@ Each of the 128 unique concepts was then classified into exactly one of three bu
 |---|---|---|
 | Pass 1 — raw extraction | 176 | — |
 | Pass 2 — exact name+concept dedup | 163 | −13 |
-| Pass 3 — concept-only dedup (synonyms) | 128 | −35 |
-| Final — workflow/orchestration removed | 60 | −68 |
-| Final — out-of-scope/not-selected removed | **29** | −31 |
+| Pass 3 — concept-level consolidation | 123 | −40 |
+| Final — workflow/orchestration removed | 49 | −74 |
+| Final — out-of-scope/not-selected removed | **30** | −19 |
 ## 4. Complete Pass-1 raw extraction, by source paper
 
 Every row below is one technique as it was named and described in its source paper. "Final status" shows where it ended up after Passes 2–3 and the workflow/scope filter.
@@ -76,7 +76,7 @@ Every row below is one technique as it was named and described in its source pap
 
 | # | Raw name | Section | Concept summary | Final status |
 |---|---|---|---|---|
-| 1 | Meta Language Creation | Input Semantics | Define custom shorthand notation/semantics for the LLM to use in the rest of the conversation. | 🚫 out of scope |
+| 1 | Meta Language Creation | Input Semantics | Define custom shorthand notation/semantics for the LLM to use in the rest of the conversation. | ✅ INCLUDED → **MetaLanguageCreation** |
 | 2 | Output Automater | Output Customization | Have the LLM generate a script/artifact that automates any steps it recommends in its output. | ✅ INCLUDED → **OutputAutomater** |
 | 3 | Persona | Output Customization | Give the LLM a persona/role to adopt, shaping the style and focus of its output. | ✅ INCLUDED → **Role / Persona Prompting** |
 | 4 | Visualization Generator | Output Customization | Generate textual input (e.g. Graphviz DOT, DALL-E prompt) for another tool to render a visualization. | ✅ INCLUDED → **VisualizationGenerator** |
@@ -118,12 +118,12 @@ Every row below is one technique as it was named and described in its source pap
 | 19 | Step-Back Prompting | 2.2.2.1 Thought Gen | LLM first asked a generic high-level question about relevant concepts before detailed reasoning. | ⛔ workflow |
 | 20 | Analogical Prompting | 2.2.2.1 Thought Gen | LLM automatically generates its own relevant exemplars (incl. CoTs) before solving. | ⛔ workflow |
 | 21 | Thread-of-Thought (ThoT) | 2.2.2.1 Thought Gen | Alternate thought-inducer phrase tailored to long/complex contexts; two-phase summarize-then-answer. | ⛔ workflow |
-| 22 | Tabular CoT (Tab-CoT) | 2.2.2.1 Thought Gen | Zero-Shot CoT variant outputting reasoning as a markdown table. | 🚫 out of scope |
+| 22 | Tabular CoT (Tab-CoT) | 2.2.2.1 Thought Gen | Zero-Shot CoT variant outputting reasoning as a markdown table. | 🔀 merged into **ChainOfThought** |
 | 23 | Few-Shot CoT | 2.2.2.2 Thought Gen | Exemplars in the prompt include full chains-of-thought (not just answers). | ✅ INCLUDED → **Chain-of-Thought (CoT)** |
 | 24 | Active-Prompting | 2.2.2.2 Thought Gen | Uncertainty/disagreement across LLM-solved training Qs used to select exemplars for human re-annotation. | ⛔ workflow |
 | 25 | Auto-CoT | 2.2.2.2 Thought Gen | Automatically generates CoT exemplars via zero-shot CoT, then builds a few-shot CoT prompt. | ⛔ workflow |
 | 26 | Complexity-Based Prompting | 2.2.2.2 Thought Gen | Selects complex exemplars + samples multiple reasoning chains, majority-vote weighted by chain length. | ✅ INCLUDED → **Complex CoT** |
-| 27 | Contrastive CoT Prompting | 2.2.2.2 Thought Gen | Exemplars include both correct AND incorrect explanations to show the model how not to reason. | 🚫 out of scope |
+| 27 | Contrastive CoT Prompting | 2.2.2.2 Thought Gen | Exemplars include both correct AND incorrect explanations to show the model how not to reason. | 🔀 merged into **ChainOfThought** |
 | 28 | Memory-of-Thought Prompting | 2.2.2.2 Thought Gen | Retrieves similar reasoned instances from unlabeled training data at test time to build a CoT prompt. | ⛔ workflow |
 | 29 | Uncertainty-Routed CoT | 2.2.2.2 Thought Gen | Samples multiple CoT paths, picks majority if above confidence threshold, else falls back to greedy. | ⛔ workflow |
 | 30 | Decomposed Prompting (DECOMP) | 2.2.3 Decomposition | Few-shot prompts the LLM to use specific sub-functions, often separate LLM/tool calls. | ⛔ workflow |
@@ -163,7 +163,7 @@ Every row below is one technique as it was named and described in its source pap
 | 4 | Automatic CoT (Auto-CoT) | 2.2 | Automatically generates diverse CoT exemplars. | ⛔ workflow |
 | 5 | Self-Consistency | 2.2 | Samples multiple reasoning chains, majority-votes final answer. | ⛔ workflow |
 | 6 | Logical CoT (LogiCoT) Prompting | 2.2 | Neurosymbolic think-verify-revise loop using reductio ad absurdum. | ⛔ workflow |
-| 7 | Chain-of-Symbol (CoS) Prompting | 2.2 | Uses condensed symbols instead of natural language for spatial reasoning. | 🚫 out of scope |
+| 7 | Chain-of-Symbol (CoS) Prompting | 2.2 | Uses condensed symbols instead of natural language for spatial reasoning. | 🔀 merged into **ChainOfThought** |
 | 8 | Tree-of-Thoughts (ToT) Prompting | 2.2 | Tree of intermediate thoughts combined with BFS/DFS search. | ⛔ workflow |
 | 9 | Graph-of-Thoughts (GoT) Prompting | 2.2 | Models reasoning as a directed graph allowing backtracking/aggregation. | ⛔ workflow |
 | 10 | System 2 Attention (S2A) Prompting | 2.2 | Two-step: regenerate clean context, then answer. | ⛔ workflow |
@@ -211,11 +211,11 @@ Every row below is one technique as it was named and described in its source pap
 | 6 | Complex CoT | 2.6 | Selects most complex exemplars + majority-votes over the most complex of N sampled reasoning chains. | ✅ INCLUDED → **Complex CoT** |
 | 7 | Program-of-Thoughts (PoT) | 2.7 | Generates Python code as reasoning, executed by interpreter. | ⛔ workflow |
 | 8 | Least-to-Most | 2.8 | Decompose into sub-problems, solve sequentially. | ✅ INCLUDED → **Least-to-Most** |
-| 9 | Chain-of-Symbol (CoS) | 2.9 | Represents spatial relationships via condensed symbols instead of NL. | 🚫 out of scope |
+| 9 | Chain-of-Symbol (CoS) | 2.9 | Represents spatial relationships via condensed symbols instead of NL. | 🔀 merged into **ChainOfThought** |
 | 10 | Structured Chain-of-Thought (SCoT) | 2.10 | Structuring reasoning via program constructs (sequence/branch/loop) for code generation. | ✅ INCLUDED → **Structured CoT (SCoT)** |
 | 11 | Plan-and-Solve (PS) | 2.11 | Devise a plan, then carry it out step by step; PS+ adds detailed instructions. | ✅ INCLUDED → **Plan-and-Solve (PS / PS+)** |
 | 12 | MathPrompter | 2.12 | 4-step algebraic-expression / analytic-solve / numeric-verify pipeline. | ⛔ workflow |
-| 13 | Contrastive CoT / Contrastive Self-Consistency | 2.13 | Provides both positive AND negative reasoning demonstrations. | 🚫 out of scope |
+| 13 | Contrastive CoT / Contrastive Self-Consistency | 2.13 | Provides both positive AND negative reasoning demonstrations. | 🔀 merged into **ChainOfThought** |
 | 14 | Federated Same/Diff Parameter Self-Consistency/CoT (Fed-SP/DP-SC/CoT) | 2.14 | Uses paraphrased crowd-sourced queries federated together for reasoning. | ⛔ workflow |
 | 15 | Analogical Reasoning | 2.15 | LLM generates its own relevant exemplars before solving. | ⛔ workflow |
 | 16 | Synthetic Prompting | 2.16 | LLM generates synthetic backward/forward exemplar pairs to augment few-shot prompts. | ⛔ workflow |
@@ -251,30 +251,30 @@ Every row below is one technique as it was named and described in its source pap
 | 2 | Chain-of-Thought Factored Decomposition Prompting | 2.1 Logical/Sequential | Combines CoT with explicit decomposition into subcomponents before sequential reasoning. | ⛔ workflow |
 | 3 | Tree-of-Thoughts (ToT) / Graph-of-Thoughts (GoT) Prompting | 2.1 Logical/Sequential | Decision tree / graph of reasoning paths for branching, creative exploration. | ⛔ workflow |
 | 4 | Skeleton-of-Thought (SoT) Prompting | 2.1 Logical/Sequential | Gives the model a structured high-level 'skeleton' template to fill in for the response. | ⛔ workflow |
-| 5 | In-Context Prompting | 2.2 Contextual/Memory | Maintaining/leveraging conversational context/history across turns within the context window. | 🚫 out of scope |
+| 5 | In-Context Prompting | 2.2 Contextual/Memory | Maintaining/leveraging conversational context/history across turns within the context window. | ⛔ workflow |
 | 6 | Multi-Personas Prompting | 2.2 Contextual/Memory | Switching the LLM between different named personas/characters across turns/queries. | ✅ INCLUDED → **Role / Persona Prompting** |
-| 7 | Conversational Prompting | 2.2 Contextual/Memory | Crafting prompts that mimic natural back-and-forth human conversation. | 🚫 out of scope |
-| 8 | Socratic Prompting | 2.2 Contextual/Memory | Leads the model/user to a conclusion via a structured series of probing questions. | 🚫 out of scope |
+| 7 | Conversational Prompting | 2.2 Contextual/Memory | Crafting prompts that mimic natural back-and-forth human conversation. | ⛔ workflow |
+| 8 | Socratic Prompting | 2.2 Contextual/Memory | Leads the model/user to a conclusion via a structured series of probing questions. | ⛔ workflow |
 | 9 | Show-me versus Tell-me Prompting | 2.3 Specificity/Targeting | Explicitly instructing the LLM to either demonstrate or describe a concept. | 🚫 out of scope |
 | 10 | Target-your-response (TAR) Prompting | 2.3 Specificity/Targeting | Directs the response toward a specific target/format/length for relevance and brevity. | 🚫 out of scope |
-| 11 | Prompt Macros and End-goal Planning | 2.3 Specificity/Targeting | Combines many potential micro-queries into one larger macro prompt aimed at an overarching goal. | 🚫 out of scope |
+| 11 | Prompt Macros and End-goal Planning | 2.3 Specificity/Targeting | Combines many potential micro-queries into one larger macro prompt aimed at an overarching goal. | ⛔ workflow |
 | 12 | Contrastive Prompting | 2.3 Specificity/Targeting | Asks the model to compare/contrast two concepts, objects, or ideas. | 🚫 out of scope |
 | 13 | Self-reflection Prompting | 2.4 Meta-Cognition | Asks the model to evaluate/critique its own prior answer (e.g. 'Are you sure about that?'). | ✅ INCLUDED → **Reflection** |
-| 14 | Meta-Prompting | 2.4 Meta-Cognition | Guides the LLM to reflect on/improve its own prompting process and methodology. | 🚫 out of scope |
+| 14 | Meta-Prompting | 2.4 Meta-Cognition | Guides the LLM to reflect on/improve its own prompting process and methodology. | ⛔ workflow |
 | 15 | Anticipatory Prompting | 2.4 Meta-Cognition | Encourages the model to foresee and proactively address likely follow-up needs/questions. | 🚫 out of scope |
 | 16 | Prompt to Code | 2.4 Meta-Cognition | Instructs the LLM to generate functional code from a natural-language description. | 🚫 out of scope |
-| 17 | Responsive Feedback Prompting | 2.5 Directional/Feedback | Incorporates user feedback on a prior output directly into the next prompt. | 🚫 out of scope |
+| 17 | Responsive Feedback Prompting | 2.5 Directional/Feedback | Incorporates user feedback on a prior output directly into the next prompt. | ⛔ workflow |
 | 18 | Directional Stimulus Prompting | 2.5 Directional/Feedback | Uses subtle hints/cues to nudge output in a desired direction without fully dictating it. | 🚫 out of scope |
 | 19 | Ambiguous Prompting | 2.5 Directional/Feedback | Deliberately vague/open-ended prompts to stimulate broad, creative, less-biased responses. | 🚫 out of scope |
 | 20 | Multimodal Prompting | 2.6 Multimodal/Cross-Disc. | Combines multiple input modalities (text, image, audio, video) in a single prompt. | 🚫 out of scope |
-| 21 | Cross-disciplinary Prompting | 2.6 Multimodal/Cross-Disc. | Blends knowledge from multiple separate disciplines/domains to generate interdisciplinary insight. | 🚫 out of scope |
+| 21 | Cross-disciplinary Prompting | 2.6 Multimodal/Cross-Disc. | Blends knowledge from multiple separate disciplines/domains to generate interdisciplinary insight. | 🔀 merged into **ContextManager** |
 | 22 | Historical Context, Visual, and Modular Prompting | 2.6 Multimodal/Cross-Disc. | Bundles historical-context framing, visual elements, and modular/component-based prompt structure. | 🚫 out of scope |
 | 23 | Flipped Interaction Prompting | 2.7 Creative/Generative | Reverses the conventional dynamic so the model asks the user questions instead of answering directly. | ✅ INCLUDED → **FlippedInteraction** |
 | 24 | Grammar Correction | 2.7 Creative/Generative | Instructs the LLM to identify/correct grammar, tone, and clarity issues in user-supplied text. | 🚫 out of scope |
-| 25 | Constrained Vocabulary Prompting | 2.7 Creative/Generative | Restricts the model's output to a specific/defined vocabulary or terminology set. | 🚫 out of scope |
-## 5. The final 29 writable prompt patterns — full derivation
+| 25 | Constrained Vocabulary Prompting | 2.7 Creative/Generative | Restricts the model's output to a specific/defined vocabulary or terminology set. | 🔀 merged into **SchemaSpecs** |
+## 5. The final 30 writable prompt patterns — full derivation
 
-For each of the 29 patterns in the final taxonomy, this table shows every raw Pass-1 mention that was merged into it (via Pass 2 exact-match and/or Pass 3 synonym-match), so the chain from raw paper text to final catalog entry is fully traceable.
+For each of the 30 patterns in the final taxonomy, this table shows every raw Pass-1 mention that was merged into it (via Pass 2 exact-match and/or Pass 3 synonym-match), so the chain from raw paper text to final catalog entry is fully traceable.
 
 ### Zero-Shot Prompting
 *Category:* In-context Learning · *Subcategory:* Zero-shot · *Component use:* Directive
@@ -611,3 +611,14 @@ For each of the 29 patterns in the final taxonomy, this table shows every raw Pa
 | Paper | Raw name | Section | Concept summary |
 |---|---|---|---|
 | White et al. 2023 | Context Manager | Context Control | User explicitly specifies what context to include/exclude, optionally resetting context entirely. |
+
+### MetaLanguageCreation
+*Category:* Context Control · *Subcategory:* Input semantics · *Component use:* Context, Directive
+
+> Define custom shorthand notation and its semantics for the model to apply in the rest of the prompt or conversation.
+
+**Raw sources merged into this pattern:**
+
+| Paper | Raw name | Section | Concept summary |
+|---|---|---|---|
+| White et al. 2023 | Meta Language Creation | Input Semantics | Define custom shorthand notation/semantics for the LLM to use in the rest of the conversation. |

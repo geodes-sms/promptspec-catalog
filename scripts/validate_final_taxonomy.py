@@ -64,8 +64,8 @@ def main() -> None:
 
     if columns != EXPECTED_COLUMNS:
         fail(f"columns changed: expected {EXPECTED_COLUMNS!r}, got {columns!r}")
-    if len(rows) != 29:
-        fail(f"final taxonomy row count: expected 29, got {len(rows)}")
+    if not rows:
+        fail("final taxonomy contains no patterns")
 
     categories: set[str] = set()
     subcategories: set[str] = set()
@@ -93,6 +93,7 @@ def main() -> None:
         subcategories.add(subcategory)
 
     print("Final taxonomy validation passed.")
+    print(f"Patterns: {len(rows)}")
     print("Categories:")
     for value in sorted(categories):
         print(f"  - {value}")

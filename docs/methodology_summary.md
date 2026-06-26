@@ -20,7 +20,6 @@ A review of prompt-engineering literature was conducted to identify established 
 
 ## Taxonomy Construction
 
-The 29 patterns were organized into a two-level taxonomy:
+The 30 patterns were organized into a two-level taxonomy:
 - **Category**: 5 high-level groups (In-Context Learning, Reasoning, Output Control, Context Control, Meta Directives)
 - **Subcategory**: Finer-grained classification within each category
-

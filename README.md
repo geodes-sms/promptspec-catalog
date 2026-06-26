@@ -1,12 +1,12 @@
 # PromptSpec Pattern Catalog
 
-This repository contains the PromptSpec prompt-pattern taxonomy: a catalog of 29 prompt-engineering patterns identified through literature review.
+This repository contains the PromptSpec prompt-pattern taxonomy: a catalog of 30 prompt-engineering patterns identified through literature review.
 
 > **Scope:** This repository is the **pattern catalog only**. The broader PromptSpec model — including prompt-component structure, pattern-to-component bindings, chunk-level realizations, the queryable graph representation, the DSL compiler — is described in the associated publication and maintained in a separate repository.
 
 ## Start here
 
-**If you just want to read the taxonomy:** [`PATTERN_CATALOG.md`](PATTERN_CATALOG.md) — a generated human-readable table of all 29 patterns, grouped by category. The taxonomy structure source of truth is [`method/prompt_taxonomy_final_29_patterns.csv`](method/prompt_taxonomy_final_29_patterns.csv), derived from [`method/master_raw_dataset.csv`](method/master_raw_dataset.csv). [`catalog/patterns.json`](catalog/patterns.json) is the generated machine-readable catalog. The `docs/` site renders the same catalog as a searchable category → subcategory → pattern tree.
+**If you just want to read the taxonomy:** [`PATTERN_CATALOG.md`](PATTERN_CATALOG.md) — a generated human-readable table of all 30 patterns, grouped by category. The taxonomy structure source of truth is [`method/prompt_taxonomy_final_29_patterns.csv`](method/prompt_taxonomy_final_29_patterns.csv), derived from [`method/master_raw_dataset.csv`](method/master_raw_dataset.csv). [`catalog/patterns.json`](catalog/patterns.json) is the generated machine-readable catalog. The `docs/` site renders the same catalog as a searchable category → subcategory → pattern tree.
 
 ## Overview
 
@@ -30,7 +30,7 @@ promptspec-catalog/
   requirements-dev.txt            # Dev/test dependencies
 
   catalog/
-    patterns.json                 # Generated 29 PatternDefinition records
+    patterns.json                 # Generated PatternDefinition records
 
   method/
     master_raw_dataset.csv        # Raw extraction dataset and count source
@@ -57,7 +57,7 @@ promptspec-catalog/
   scripts/
     build_catalog.py              # Generate catalog/patterns.json from method CSV
     build_pattern_catalog_md.py   # Generate PATTERN_CATALOG.md from patterns.json
-    validate_taxonomy_counts.py   # Reproduce 176 -> 163 -> 128 -> 29 counts
+    validate_taxonomy_counts.py   # Compute and validate taxonomy reduction counts
     validate_final_taxonomy.py    # Validate final taxonomy CSV schema/style
     validate_catalog.py           # Catalog schema/content validation
     validate_catalog_sync.py      # Check generated catalog agrees with method CSV
@@ -69,14 +69,14 @@ promptspec-catalog/
 
 ## Patterns
 
-The catalog contains **29 patterns** organized into 5 categories:
+The catalog contains **30 patterns** organized into 5 categories:
 
 | Category | Count | Examples |
 |----------|-------|----------|
 | IN_CONTEXT_LEARNING | 2 | ZeroShot, FewShot |
 | REASONING | 6 | ChainOfThought, StructuredCoT, ComplexCoT, PlanAndSolve, LeastToMost, ReverseCoT |
 | OUTPUT_CONTROL | 9 | Recipe, SchemaSpecs, OutputAutomater, Template, SelfVerification, SelfCalibration, FactCheckList, Reflection, VisualizationGenerator |
-| CONTEXT_CONTROL | 2 | Persona, ContextManager |
+| CONTEXT_CONTROL | 3 | Persona, ContextManager, MetaLanguageCreation |
 | META_DIRECTIVES | 10 | RefusalBreaker, FlippedInteraction, GamePlay, InfiniteGeneration, QuestionRefinement, RAR, AlternativeApproaches, RE2, InstructionSelection, CognitiveVerifier |
 
 All patterns are derived from published prompt-engineering literature. For the full per-pattern table (definitions, examples, notes, and formalizations), see [`PATTERN_CATALOG.md`](PATTERN_CATALOG.md), which is generated from `catalog/patterns.json`. Taxonomy structure changes should be made in `method/prompt_taxonomy_final_29_patterns.csv`; formalization changes should be made in `method/formalizations/<pattern_id>.promptspec`; then regenerate `catalog/patterns.json` and `PATTERN_CATALOG.md`.
@@ -86,6 +86,7 @@ All patterns are derived from published prompt-engineering literature. For the f
 ```bash
 python3 scripts/build_catalog.py
 python3 scripts/build_pattern_catalog_md.py
+python3 scripts/build_taxonomy_artifacts.py
 ```
 
 The build writes canonical artifacts at `catalog/patterns.json` and

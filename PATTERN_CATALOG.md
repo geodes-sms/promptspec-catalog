@@ -2,7 +2,7 @@
 
 > **Read this if you just want the taxonomy.** This is the MD view of the catalog. The method CSV is the source of truth; [`catalog/patterns.json`](catalog/patterns.json) is the generated machine-readable view.
 
-The catalog contains **29 prompt-engineering patterns** across **5 categories**.
+The catalog contains **30 prompt-engineering patterns** across **5 categories**.
 
 All patterns in this catalog are derived from published prompt-engineering literature. They are taxonomy entries, not empirically observed corpus findings.
 
@@ -30,6 +30,7 @@ Each pattern lists the **prompt component type(s)** it relates to in the PromptS
 | Template | Output Control | `DIRECTIVE`, `OUTPUT_FORMAT` |
 | VisualizationGenerator | Output Control | `OUTPUT_FORMAT` |
 | ContextManager | Context Control | `CONTEXT`, `DIRECTIVE`, `PROCEDURAL_STEPS` |
+| MetaLanguageCreation | Context Control | `CONTEXT`, `DIRECTIVE` |
 | Persona | Context Control | `CONTEXT`, `OUTPUT_FORMAT`, `PROFILE_ROLE` |
 | AlternativeApproaches | Meta-Directives | `DIRECTIVE`, `PROCEDURAL_STEPS` |
 | CognitiveVerifier | Meta-Directives | `DIRECTIVE`, `PROCEDURAL_STEPS` |
@@ -47,7 +48,7 @@ Each pattern lists the **prompt component type(s)** it relates to in the PromptS
 
 ### FewShot
 
-Provide exemplar input-output pairs to guide the model.
+Provide a few exemplar input-output pairs to guide the model.
 
 **Component(s):** `DIRECTIVE`, `EXAMPLES`
 
@@ -110,7 +111,7 @@ Now do the same for:
 
 ### ZeroShot
 
-Provide no examples to guide the task; rely on direct instructions plus input data.
+Provide no examples to guide the task.
 
 **Component(s):** `DIRECTIVE`
 
@@ -124,9 +125,14 @@ Input data: {INPUT_DATA}
 *Example:*
 
 ```
-Translate the following English word to French.
+Translate English to French.
 
-Input: Morning
+Example:
+Input: Night
+Output: Nuit
+
+Now apply to:
+Morning
 ```
 
 *Formalization:*
@@ -155,7 +161,7 @@ Input data: {{input_data}}
 
 ### ChainOfThought
 
-Encourage generic step-by-step reasoning before the final answer.
+Encourage step-by-step reasoning before final answer.
 
 **Component(s):** `PROCEDURAL_STEPS`
 
@@ -410,7 +416,7 @@ Then, generate the reasoning steps that justify the answer.
 
 ### StructuredCoT
 
-Structure reasoning with program-like constructs such as sequencing, branching, and looping.
+Structure reasoning with program-like constructs (loops, branches).
 
 **Component(s):** `OUTPUT_FORMAT`, `PROCEDURAL_STEPS`
 
@@ -635,7 +641,7 @@ Steps to consider:
 
 ### Reflection
 
-Model reflects on its first output, critiques it, and produces a revised answer.
+Model reflects on its first output, critiques, and improves it.
 
 **Component(s):** `CONSTRAINTS`, `PROCEDURAL_STEPS`
 
@@ -694,7 +700,7 @@ Suggest potential improvements.
 
 ### SchemaSpecs
 
-Define an explicit schema or required fields that the model output must follow.
+Define schema/structure the model must follow.
 
 **Component(s):** `OUTPUT_FORMAT`
 
@@ -784,7 +790,7 @@ If confidence is below {{threshold}}, revise or abstain.
 
 ### SelfVerification
 
-Ask the model to verify its own answer against explicit constraints before finalizing.
+Model checks and verifies its own answers before finalizing.
 
 **Component(s):** `CONSTRAINTS`, `PROCEDURAL_STEPS`
 
@@ -849,7 +855,7 @@ Final Answer = verified answer
 
 ### Template
 
-Preserve a provided human-readable prose template or textual layout.
+Use a reusable template to structure answers consistently.
 
 **Component(s):** `DIRECTIVE`, `OUTPUT_FORMAT`
 
@@ -864,20 +870,6 @@ Preserve formatting of template.
 
 {QUESTION}
 {INPUT_DATA}
-```
-
-*Example:*
-
-```
-Use this template for every response:
-
-Title: {TITLE}
-Summary: {SUMMARY}
-Next Steps:
-1. {STEP_ONE}
-2. {STEP_TWO}
-
-Fill the placeholders for a project status update about migrating a documentation site. Preserve the labels, numbering, and line breaks.
 ```
 
 *Formalization:*
@@ -912,7 +904,7 @@ Preserve formatting of template.
 
 ### VisualizationGenerator
 
-Generate visual or tabular representations for tools such as charting libraries.
+Generate visual or tabular representations (charts, tables).
 
 **Component(s):** `OUTPUT_FORMAT`
 
@@ -1036,9 +1028,40 @@ If signal = "{{reset_signal}}", discard accumulated context and restart within {
 ```
 ~~~
 
+### MetaLanguageCreation
+
+Define custom shorthand notation and its semantics for the model to apply in the rest of the prompt or conversation.
+
+**Component(s):** `CONTEXT`, `DIRECTIVE`
+
+*Formalization:*
+
+~~~promptspec
+pattern MetaLanguageCreation
+category CONTEXT_CONTROL
+
+variables {
+    shorthand* : string
+    meaning* : string
+    question* : string
+    input_data? : string
+}
+
+template ```
+In this conversation, interpret "{{shorthand}}" to mean: {{meaning}}
+
+Whenever I use "{{shorthand}}", apply that meaning in the rest of the prompt or conversation.
+
+{{question}}
+{{#input_data}}
+{{input_data}}
+{{/input_data}}
+```
+~~~
+
 ### Persona
 
-Adopt a role/persona to shape style and voice.
+Adopt a role/persona to shape style/voice.
 
 **Component(s):** `CONTEXT`, `OUTPUT_FORMAT`, `PROFILE_ROLE`
 
@@ -1148,7 +1171,7 @@ Compare pros and cons of each.
 
 ### CognitiveVerifier
 
-Add explicit verification of reasoning correctness via sub-questions.
+Add explicit verification of reasoning correctness.
 
 **Component(s):** `DIRECTIVE`, `PROCEDURAL_STEPS`
 
@@ -1300,7 +1323,7 @@ Interaction must proceed according to rules.
 
 ### InfiniteGeneration
 
-Model generates continuously, with prompts to keep going.
+Model generates continuously, with prompts to “keep going.”
 
 **Component(s):** `DIRECTIVE`
 
@@ -1406,7 +1429,7 @@ Select the instruction best suited to {{task}}, state your choice, then carry ou
 
 ### QuestionRefinement
 
-Improve or reformulate the user's query for clarity.
+Improve or reformulate the user’s query for clarity.
 
 **Component(s):** `DIRECTIVE`
 
@@ -1540,7 +1563,7 @@ Now answer the question.
 
 ### RefusalBreaker
 
-Reframe a request when the model refuses; mainly an on-refusal fallback pattern.
+Overcome model refusals by reframing the request.
 
 **Component(s):** `CONSTRAINTS`, `DIRECTIVE`
 
@@ -1549,7 +1572,7 @@ Reframe a request when the model refuses; mainly an on-refusal fallback pattern.
 ```
 If refusal occurs:
 Step 1: State refusal reason.
-Step 2: Reframe request into 
+Step 2: Reframe request into
 alternative query: {ALT_QUERY}
 
 {QUESTION}

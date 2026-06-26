@@ -97,7 +97,7 @@ Provide outputs that {PERSONA} would create
 {QUESTION}
 {INPUT_DATA}
 ",Role & perspective
-Reverse CoT,Reasoning,Procedural Steps,"Generate reasoning steps after giving the answer, to simulate justification.","Please answer the question.
+Reverse CoT,Reasoning,Procedural Steps,"Works backward from the desired output to infer the inputs or steps that produce it.","Please answer the question.
 First, state the final answer directly.
 Then, explain the reasoning that justifies your answer.
  “The answer is 57. Reasoning: Because 23+47…”","{QUESTION}
@@ -153,7 +153,7 @@ Final Answer = {ANSWER_REVISED}
 
 {QUESTION}
 {INPUT_DATA}",Verification
-OutputAutomater,Output Control,Output Format/Style,"The model outputs an executable artifact (typically a script) that automates the steps it recommends, instead of only describing them.","Whenever your response includes steps a user would otherwise carry out by hand, also output a runnable Bash script that performs those steps automatically.
+OutputAutomater,Output Control,Output Format/Style,"Requires a structured, machine-readable output format (e.g., JSON, XML, CSV).","Whenever your response includes steps a user would otherwise carry out by hand, also output a runnable Bash script that performs those steps automatically.
 
 Task: set up a Python virtual environment and install the project's dependencies.","Whenever your output contains at least one manual step, generate an executable {LANGUAGE} script that automates those steps.
 
@@ -305,3 +305,4 @@ If signal = ""reset"", discard accumulated context and restart within {SCOPE}.
 
 {QUESTION}
 {INPUT_DATA}",Context grounding
+MetaLanguageCreation,Context Control,"Context, Directive",Define custom shorthand notation and its semantics for the model to apply in the rest of the prompt or conversation.,,,Input semantics
