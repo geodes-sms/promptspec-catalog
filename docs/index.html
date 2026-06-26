@@ -75,6 +75,23 @@
               placeholder="Search names, descriptions, or components"
             />
           </div>
+          <div class="field">
+            <label for="category-filter">Category</label>
+            <select id="category-filter" name="category">
+              <option value="">All categories</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="subcategory-filter">Subcategory</label>
+            <select id="subcategory-filter" name="subcategory">
+              <option value="">All subcategories</option>
+            </select>
+          </div>
+          <div class="control-actions">
+            <button class="button clear-filters" id="clear-filters" type="button">
+              Clear filters
+            </button>
+          </div>
         </form>
 
         <div class="empty-state hidden" id="empty-state" role="status">

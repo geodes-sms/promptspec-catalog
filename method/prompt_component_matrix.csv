@@ -1,0 +1,31 @@
+Pattern Name,Category,Subcategory,Profile/Role,Directive,Context,Procedural Steps,Examples,Output Format/Style,Constraints
+Zero-Shot Prompting,In-context Learning,Zero-shot,0,1,0,0,0,0,0
+Few-Shot Prompting,In-context Learning,Few-shot,0,1,0,0,1,0,0
+Chain-of-Thought (CoT),Reasoning,Chain-of-Thought,0,0,0,1,0,0,0
+Complex CoT,Reasoning,Chain-of-Thought,0,0,0,1,0,0,0
+Structured CoT (SCoT),Reasoning,Chain-of-Thought,0,0,0,1,0,1,0
+Plan-and-Solve (PS / PS+),Reasoning,Planning,0,0,0,1,0,0,0
+Least-to-Most,Reasoning,Decomposition,0,0,0,1,0,0,0
+Role / Persona Prompting,Context Control,Role & perspective,1,0,1,0,0,1,0
+Reverse CoT,Reasoning,Chain-of-Thought,0,0,0,1,0,0,0
+SelfVerification,Output Control,Verification,0,0,0,1,0,0,1
+SelfCalibration,Output Control,Verification,0,0,0,1,0,0,1
+FactCheckList,Output Control,Verification,0,0,0,1,0,0,1
+Reflection,Output Control,Verification,0,0,0,1,0,0,1
+OutputAutomater,Output Control,Output formatting,0,0,0,0,0,1,0
+Recipe,Output Control,Procedural,0,1,0,1,0,0,0
+Template,Output Control,Output formatting,0,1,0,0,0,1,0
+VisualizationGenerator,Output Control,Output formatting,0,0,0,0,0,1,0
+SchemaSpecs,Output Control,Schema specification,0,0,0,0,0,1,0
+FlippedInteraction,Meta-Directives,Interaction,0,1,0,0,0,0,0
+GamePlay,Meta-Directives,Interaction,0,1,0,0,0,0,0
+InfiniteGeneration,Meta-Directives,Interaction,0,1,0,0,0,0,0
+Question Refinement,Meta-Directives,Enhancement,0,1,0,0,0,0,0
+RAR,Meta-Directives,Refinement,0,1,0,1,0,0,0
+Alternative Approaches,Meta-Directives,Enhancement,0,1,0,1,0,0,0
+RE2,Meta-Directives,Refinement,0,1,0,0,0,0,0
+RefusalBreaker,Meta-Directives,Enhancement,0,1,0,0,0,0,1
+InstructionSelection,Meta-Directives,Refinement,0,1,0,1,0,0,0
+CognitiveVerifier,Meta-Directives,Enhancement,0,1,0,1,0,0,0
+ContextManager,Context Control,Context grounding,0,1,1,1,0,0,0
+MetaLanguageCreation,Context Control,Input semantics,0,1,1,0,0,0,0

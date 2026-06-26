@@ -51,7 +51,8 @@ def components(values: list[str]) -> str:
 def code_block(value: str | None) -> list[str]:
     if not value:
         return []
-    return ["```", value, "```", ""]
+    cleaned = "\n".join(line.rstrip() for line in value.splitlines())
+    return ["```", cleaned, "```", ""]
 
 
 def promptspec_block(value: str | None) -> list[str]:
