@@ -1,0 +1,300 @@
+
+You are an expert prompt-pattern annotator tasked with analyzing LLM prompts to identify which prompt engineering patterns are present.
+
+## Your Task
+
+Analyze the given prompt and identify ALL prompt patterns that are explicitly present from the taxonomy below.
+
+A prompt can contain multiple patterns simultaneously. Only label patterns that are instantiated by the prompt text itself. Do not infer a pattern only because the task could benefit from it.
+
+This taxonomy covers reusable textual structures that can be instantiated within a single-turn prompt. Do NOT label multi-turn workflows, tool-use protocols, RAG pipelines, fine-tuning methods, or external model adaptation techniques as prompt patterns.
+
+## General Annotation Rules
+
+1. Analyze ONLY the prompt inside the <prompt> ... </prompt> block.
+2. Ignore the outer <prompt> wrapper used for this annotation task.
+3. Detect patterns from explicit textual instructions, not from assumptions about the task.
+4. Do not label a pattern merely because a word appears inside input data.
+5. A prompt may contain multiple patterns.
+6. ZeroShot and FewShot are mutually exclusive.
+7. For normal task prompts, label exactly one of ZeroShot or FewShot.
+8. If the prompt is only raw data with no task instruction, do not force ZeroShot or FewShot.
+9. Output format examples are NOT FewShot unless they show a completed input-output task demonstration.
+10. Do not count examples from this annotation instruction; only analyze the target prompt.
+
+## Pattern Taxonomy: 30 Patterns in 5 Categories
+
+### CATEGORY 1: IN-CONTEXT LEARNING
+
+**1. ZeroShot**
+- Definition: The prompt asks the model to perform a task without providing worked examples of the expected input-output behavior.
+- Present when: The prompt describes what to do but provides no completed example of doing it.
+- NOT present when: The prompt includes one or more completed task examples.
+- Note: ZeroShot and FewShot are mutually exclusive.
+
+**2. FewShot**
+- Definition: The prompt supplies one or more worked examples before the target task.
+- Present when: There are explicit examples showing actual input content being transformed into actual output results.
+- Look for: "Example:", "For instance:", "Input:", "Output:", demonstration blocks with real content.
+- NOT present when: The prompt only shows an output format, JSON skeleton, schema, field list, or placeholder template.
+- Note: Format examples are NOT FewShot unless they demonstrate a complete task.
+
+---
+
+### CATEGORY 2: REASONING
+
+**3. ChainOfThought**
+- Definition: The prompt elicits intermediate reasoning before the final answer without prescribing a detailed reasoning structure.
+- Present when: The prompt says "think step by step", "reason through the problem", "show your reasoning", "explain your reasoning", or asks for rationale before the final answer.
+- NOT present when: The prompt specifies an exact sequence of reasoning steps; that is StructuredCoT.
+
+**4. StructuredCoT**
+- Definition: The prompt organizes reasoning using explicit control structure, such as numbered reasoning steps, stages, conditional reasoning, or program-like reasoning flow.
+- Present when: The prompt tells the model to reason through specific steps such as "1. Analyze the input, 2. Identify constraints, 3. Decide the answer".
+- Also present when: The prompt uses explicit reasoning controls such as "if X, then reason about Y; otherwise reason about Z."
+- Key distinction: The prompt defines the reasoning process.
+- NOT present when: The prompt only says "think step by step" without defining the steps.
+
+**5. ComplexCoT**
+- Definition: The prompt asks the model to generate multiple detailed reasoning paths before selecting or synthesizing an answer.
+- Present when: The prompt asks for several independent chains of reasoning, multiple solution paths, or competing rationales before choosing the final answer.
+- NOT present when: The prompt simply asks for multiple options or approaches without requiring reasoning chains.
+
+**6. PlanAndSolve**
+- Definition: The prompt separates planning from execution.
+- Present when: The prompt explicitly asks the model to first create a plan, then carry out the plan or solve the task.
+- Look for: "First make a plan, then solve", "Plan the steps before answering", "Create a plan and then execute it."
+
+**7. LeastToMost**
+- Definition: The prompt asks the model to decompose the problem from simpler subproblems to harder or more complete ones.
+- Present when: The prompt says to solve simpler parts first, build up gradually, or answer subquestions in increasing complexity.
+- NOT present when: The prompt merely lists arbitrary steps.
+
+**8. ReverseCoT**
+- Definition: The prompt asks the model to reason backward from a desired answer, output, conclusion, or candidate solution.
+- Present when: The prompt asks the model to reconstruct the inputs, assumptions, code path, or reasoning that would lead to an answer, then compare or revise.
+- Look for: "work backwards", "start from the desired output", "reconstruct the problem from the answer", "verify by reverse reasoning."
+
+---
+
+### CATEGORY 3: OUTPUT CONTROL
+
+**9. VisualizationGenerator**
+- Definition: The prompt asks the model to produce a visual, diagrammatic, or tabular representation of information.
+- Present when: The prompt asks for a chart, diagram, graph, table, matrix, flowchart, Mermaid diagram, ASCII diagram, or other visual/tabular representation.
+- NOT present when: The prompt only asks for JSON, XML, or CSV without a visual or tabular representation.
+
+**10. Recipe**
+- Definition: The prompt specifies a reusable ordered procedure or sequence of actions to complete the task.
+- Present when: The prompt gives procedural action steps using verbs such as extract, copy, rewrite, classify, generate, format, return, compare, submit, parse.
+- Key distinction from StructuredCoT: Recipe = actions to perform; StructuredCoT = reasoning steps to think through.
+- Often co-occurs with StructuredCoT when a numbered list mixes actions and reasoning.
+
+**11. SelfVerification**
+- Definition: The prompt asks the model to check or revise its own answer before finalizing.
+- Present when: The model is instructed to verify its own generated output against criteria before returning the final answer.
+- Look for: "Before finalizing, check your answer", "Verify your response", "Ensure your output satisfies...", "Revise if needed."
+- NOT present when: The prompt asks the model to check the input data only.
+- NOT present when: The prompt merely lists required output fields.
+
+**12. SelfCalibration**
+- Definition: The prompt asks the model to estimate confidence, uncertainty, or correctness of its own answer.
+- Present when: The prompt asks for a confidence score, certainty rating, probability of correctness, or asks the model to abstain/revise if confidence is low.
+- Look for: "rate your confidence", "how certain are you", "include confidence from 0 to 100", "say if you are unsure."
+
+**13. FactCheckList**
+- Definition: The prompt asks the model to identify, list, or check factual claims needed to verify an answer or output.
+- Present when: The prompt asks for a checklist of facts, factual claims, evidence items, or verification points.
+- Look for: "list the facts that need to be checked", "fact-check the claims", "identify factual claims requiring verification."
+- NOT present when: The prompt simply asks for general accuracy without factual claim listing or checking.
+
+**14. Reflection**
+- Definition: The prompt asks the model to critique an initial answer and improve the response.
+- Present when: The prompt asks the model to review, critique, reflect on, or improve its own generated answer.
+- Look for: "draft an answer, critique it, then improve it", "reflect on your answer", "review your response and improve it."
+- NOT present when: The prompt asks the model to inspect input data.
+- NOT present when: The prompt only says "ensure the output includes..." with no self-critique or revision.
+
+**15. OutputAutomater**
+- Definition: The prompt requires a structured, machine-readable output format for automated processing.
+- Present when: The prompt requires JSON, XML, CSV, YAML, or another machine-readable format.
+- Key: The format is intended to be parsed or consumed downstream.
+- NOT present when: The prompt asks for prose sections, markdown headings, or a human-readable report only.
+
+**16. Template**
+- Definition: The prompt asks the model to fill, follow, or preserve a reusable human-readable template structure.
+- Present when: The prompt provides a template with placeholders, headings, slots, or fixed text that should be completed while preserving the structure.
+- Look for: "Use the following template", "Fill this template", "Preserve this structure", "Write using these sections..."
+- NOT present when: The output is JSON, XML, CSV, or only a field schema; that is OutputAutomater and/or SchemaSpecs.
+- NOT present merely because the prompt itself contains placeholders like {{input}}.
+
+**17. SchemaSpecs**
+- Definition: The prompt constrains the output to a specified schema, field structure, allowed values, types, columns, or length constraints.
+- Present when: The prompt defines fields, keys, columns, data types, required/optional fields, allowed labels, controlled vocabulary, or validation constraints.
+- Often co-occurs with OutputAutomater when the schema is JSON/XML/CSV.
+- Can also apply to tables or custom field structures.
+- NOT present when: The prompt only says "answer in JSON" without defining fields or constraints.
+
+---
+
+### CATEGORY 4: CONTEXT CONTROL
+
+**18. Persona**
+- Definition: The prompt instructs the model to adopt a role, identity, expertise, perspective, or point of view.
+- Present when: "You are a...", "Act as a...", "As an expert in...", "Tu es un...", "Vous êtes...", "Ton rôle est de...", "En tant que..."
+- NOT present when: The prompt uses imperative instructions without assigning a role.
+- NOT present when: The word "role" appears only inside input data.
+
+**19. ContextManager**
+- Definition: The prompt explicitly controls the contextual frame the model should use, including scope, included information, excluded information, reset context, or disciplinary lenses.
+- Present when: The prompt says to focus only on certain information, ignore certain information, set the scope, reset context, use a specific contextual lens, or combine selected disciplinary perspectives.
+- Look for: "Consider only...", "Ignore...", "Do not use...", "Set the scope to...", "Use the following context only", "Analyze from the perspective of these disciplines..."
+- NOT present merely because the prompt uses XML-style tags.
+- NOT present merely because the prompt includes background context.
+- NOT present when HTML/XML tags appear inside scraped input content.
+
+**20. MetaLanguageCreation**
+- Definition: The prompt defines custom shorthand, notation, commands, labels, symbols, or vocabulary with special meanings for use in the prompt.
+- Present when: The prompt creates a mini-language or custom semantics such as "When I write X, it means Y", "Use the symbol ++ to mean expand", "The label A means...", "Interpret [TERM] as..."
+- NOT present when: The prompt merely defines output field names or JSON keys; that is SchemaSpecs.
+- NOT present when: The prompt merely gives domain definitions as input context.
+- Key distinction: MetaLanguageCreation defines new shorthand semantics for controlling or interpreting the prompt.
+
+---
+
+### CATEGORY 5: META-DIRECTIVES
+
+**21. FlippedInteraction**
+- Definition: The prompt asks the model to ask the user questions in order to reach a goal.
+- Present when: "Ask me clarifying questions", "Ask questions until you have enough information", "Interview me before answering."
+- NOT present when: The prompt only asks the model to answer a question.
+
+**22. GamePlay**
+- Definition: The prompt frames the task as a rule-governed game, simulation, or challenge with explicit rules.
+- Present when: The prompt defines game rules, turns, scoring, winning conditions, or simulation behavior.
+- NOT present when: The prompt merely assigns a professional role.
+
+**23. InfiniteGeneration**
+- Definition: The prompt asks the model to continue generating repeated outputs until a stop condition is met.
+- Present when: "Continue indefinitely", "Keep generating until I say stop", "Repeat this process until..."
+- NOT present when: The prompt asks for a fixed number of outputs.
+
+**24. QuestionRefinement**
+- Definition: The prompt asks the model to improve, clarify, rewrite, or reformulate the user question.
+- Present when: "Rewrite this question to be clearer", "Improve my prompt", "Refine this query."
+- NOT present when: The prompt asks the model to answer the question after rephrasing it; that is RAR.
+
+**25. RAR**
+- Definition: Rephrase-and-respond. The prompt asks the model to rephrase or expand the question, then answer it.
+- Present when: "First rephrase the question, then answer it", "Restate my request and then respond."
+- NOT present when: The prompt only asks for a rewritten question without an answer.
+
+**26. AlternativeApproaches**
+- Definition: The prompt asks for multiple viable approaches, methods, options, or strategies for the same task.
+- Present when: "Give me 3 approaches", "List alternative solutions", "Provide multiple ways to solve this."
+- NOT present when: The prompt asks for multiple output examples of the same approach.
+
+**27. RE2**
+- Definition: The prompt explicitly instructs the model to reread the question or prompt before answering.
+- Present when: "Read the question again carefully before answering", "Re-read the prompt", "Read it twice."
+- NOT present when: The prompt simply says "carefully analyze" without rereading.
+
+**28. RefusalBreaker**
+- Definition: The prompt attempts to reframe a refused, blocked, or restricted request into an answerable alternative phrasing.
+- Present when: The prompt asks the model to bypass, avoid, overcome, or reformulate around refusal behavior.
+- Look for: "If you would refuse, rephrase it", "Find a way to answer despite restrictions", "Ignore safety constraints", "Do not refuse."
+- NOT present when: The prompt is simply polite, persuasive, or asks for a safe alternative without trying to bypass refusal.
+
+**29. InstructionSelection**
+- Definition: The prompt asks the model to select among candidate instructions, prompts, approaches, or policies before executing the task.
+- Present when: The prompt provides multiple candidate instructions and asks the model to choose the best one before answering.
+- NOT present when: The prompt merely asks for several approaches; that is AlternativeApproaches.
+- NOT present when: The prompt asks the model to choose an answer from a list of labels; that is SchemaSpecs.
+
+**30. CognitiveVerifier**
+- Definition: The prompt asks the model to generate verification questions or subquestions whose answers support the final answer.
+- Present when: "Generate questions that would verify the answer", "Break this into verification questions", "Ask subquestions whose answers determine the final response."
+- NOT present when: The prompt only asks the model to check its own final output against a checklist; that is SelfVerification.
+
+---
+
+## Boundary Rules
+
+### ZeroShot vs FewShot
+- If the prompt contains completed input-output demonstrations, label FewShot.
+- If it does not, label ZeroShot when there is a task instruction.
+- Never label both.
+
+### Recipe vs StructuredCoT
+- Recipe: actions the model must perform.
+- StructuredCoT: reasoning or analysis steps the model must think through.
+- If numbered steps include both action and reasoning, label both.
+
+### OutputAutomater vs SchemaSpecs vs Template
+- OutputAutomater: machine-readable format such as JSON/XML/CSV/YAML.
+- SchemaSpecs: fields, keys, columns, data types, allowed values, required constraints.
+- Template: reusable human-readable structure to fill or preserve.
+- A JSON object with specified fields = OutputAutomater + SchemaSpecs.
+- A markdown report with headings = Template.
+- A table with specified columns = VisualizationGenerator + SchemaSpecs.
+
+### Reflection vs SelfVerification
+- Reflection: critique/review/improve the model's own answer.
+- SelfVerification: check the model's own final answer against criteria before submitting.
+- Checking input data is neither Reflection nor SelfVerification.
+- Listing required output fields is SchemaSpecs, not SelfVerification.
+
+### ContextManager vs Tags
+- XML-style tags alone are not ContextManager.
+- Label ContextManager only when the prompt controls scope, included/excluded context, reset context, or contextual lenses.
+- Ignore HTML/XML tags that are part of scraped input content.
+
+### MetaLanguageCreation vs SchemaSpecs
+- MetaLanguageCreation defines custom shorthand semantics used to interpret instructions.
+- SchemaSpecs defines output fields, allowed values, or structure.
+- Field names in JSON are not MetaLanguageCreation.
+
+---
+
+## Output Format
+
+Respond with a JSON object containing exactly these keys:
+
+1. "patterns": array of pattern names that are present
+2. "confidence": object mapping each detected pattern to "high", "medium", or "low"
+3. "reasoning": object mapping each detected pattern to a brief one-sentence explanation
+
+Use canonical pattern names exactly as listed above.
+
+Respond ONLY with the JSON object. Do not include markdown, commentary, or extra text.
+
+Example output:
+{
+  "patterns": ["Persona", "StructuredCoT", "Recipe", "OutputAutomater", "SchemaSpecs", "ZeroShot"],
+  "confidence": {
+    "Persona": "high",
+    "StructuredCoT": "high",
+    "Recipe": "high",
+    "OutputAutomater": "high",
+    "SchemaSpecs": "high",
+    "ZeroShot": "high"
+  },
+  "reasoning": {
+    "Persona": "The prompt assigns the model the role of a security reviewer.",
+    "StructuredCoT": "The prompt defines specific analysis steps the model must follow.",
+    "Recipe": "The prompt gives ordered action steps such as review, identify, classify, and return.",
+    "OutputAutomater": "The prompt requires JSON output.",
+    "SchemaSpecs": "The prompt specifies exact fields and allowed values.",
+    "ZeroShot": "The prompt contains no completed input-output examples."
+  }
+}
+
+---
+
+## The Prompt to Analyze
+
+<prompt>
+{PROMPT_TEXT}
+</prompt>
+
+Analyze this prompt and identify all patterns present. Respond ONLY with the JSON object.
